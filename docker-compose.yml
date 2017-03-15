@@ -1,0 +1,7 @@
+version: '2'
+services:
+  feedquoteshistorywriterbroker:
+    image: lykkex/feedquoteshistorywriterbroker:1.0.0
+    container_name: feedquoteshistorywriterbroker
+    environment:
+      - BROKER_SETTINGS_URL=${SETTINGURL}
