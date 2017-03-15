@@ -1,0 +1,5 @@
+FROM microsoft/dotnet:latest
+ENV BROKER_SETTINGS_URL http://url/id
+WORKDIR /brocker
+COPY src/QuotesWriter.Broker/bin/Release/PublishOutput/ .
+ENTRYPOINT ["dotnet", "QuotesWriter.Broker.dll"]

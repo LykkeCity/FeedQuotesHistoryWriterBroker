@@ -1,19 +1,39 @@
 ﻿{
   "version": "1.0.0-*",
   "buildOptions": {
+    "copyToOutput": {
+      "include": [
+        "appsettings.json",
+        "appsettings.development.json",
+        "appsettings.production.json",
+        "appsettings.staging.json"
+      ]
+    },
     "emitEntryPoint": true
   },
 
   "dependencies": {
     "Microsoft.NETCore.App": {
       "type": "platform",
-      "version": "1.0.1"
-    }
+      "version": "1.1.0"
+    },
+    "AzureRepositories.Quotes": { "target": "project" },
+    "Lykke.AzureStorage": "1.2.7",
+    "Lykke.Common": "1.1.21",
+    "Lykke.Logs": "1.0.10",
+    "Lykke.RabbitMqBroker": "1.0.43",
+    "Lykke.SlackNotifications": "1.0.10",
+    "Lykke.SlackNotification.AzureQueue": "1.0.4",
+    "Microsoft.Extensions.Configuration": "1.1.0",
+    "Microsoft.Extensions.Configuration.Binder": "1.1.0",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.1.0",
+    "Microsoft.Extensions.Configuration.Json": "1.1.0",
+    "Microsoft.Extensions.DependencyInjection": "1.1.0"
   },
 
   "frameworks": {
-    "netcoreapp1.0": {
-      "imports": "dnxcore50"
+    "netcoreapp1.1": {
+      "imports": [ "dnxcore50", "portable-net45+win8" ]
     }
   }
 }
