@@ -10,10 +10,10 @@ namespace QuotesWriter.Broker
     {
         public SlackNotificationsSettings SlackNotifications { get; set; } = new SlackNotificationsSettings();
         public FeedQuotesHistoryWriterBrokerSettings FeedQuotesHistoryWriterBroker { get; set; } = new FeedQuotesHistoryWriterBrokerSettings();
-        public RabbitMqSettings RabbitMq { get; set; } = new RabbitMqSettings();
 
         public class FeedQuotesHistoryWriterBrokerSettings
         {
+            public RabbitMqSettings RabbitMq { get; set; } = new RabbitMqSettings();
             public ConnectionStringsSettings ConnectionStrings { get; set; } = new ConnectionStringsSettings();
         }
 
@@ -23,7 +23,6 @@ namespace QuotesWriter.Broker
             public int Port { get; set; }
             public string Username { get; set; }
             public string Password { get; set; }
-            public string ExchangeOrderbook { get; set; }
             public string QuoteFeed { get; set; }
         }
 
@@ -38,5 +37,4 @@ namespace QuotesWriter.Broker
             public AzureQueueSettings AzureQueue { get; set; } = new AzureQueueSettings();
         }
     }
-
 }

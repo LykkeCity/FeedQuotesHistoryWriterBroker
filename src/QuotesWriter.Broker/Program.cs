@@ -38,7 +38,7 @@ namespace QuotesWriter.Broker
                 log.Info("Loading app settings from web-site.");
                 string settingsJson = LoadSettings(settingsUrl);
                 var appSettings = JsonConvert.DeserializeObject<AppSettings>(settingsJson);
-
+                
                 log.Info("Initializing azure/slack logger.");
                 var services = new ServiceCollection(); // only used for azure logger
                 logAggregate.ConfigureAzureLogger(services, Startup.ApplicationName, appSettings);
