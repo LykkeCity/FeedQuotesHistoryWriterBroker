@@ -45,3 +45,7 @@ If the table does not exist the broker creates it.
 ## Start
 
 On successful start the broker creates several log records with `level="Info"` to inform that it is up & running.
+
+## Data Storage
+
+The broker stores quotes history in the table `QuotesHistory`.
