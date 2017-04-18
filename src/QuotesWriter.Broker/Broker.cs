@@ -19,14 +19,10 @@ namespace QuotesWriter.Broker
     internal sealed class Broker : TimerPeriod, IPersistent
     {
         private readonly static string COMPONENT_NAME = "FeedQuotesHistoryWriterBroker";
-        private readonly static string PROCESS = "Broker";
 
         private RabbitMqSubscriber<Quote> subscriber;
         private Controller controller;
         private ILog logger;
-
-        private bool isStarted = false;
-        private bool isDisposed = false;
 
         private ILifetimeScope scope;
         public ILifetimeScope Scope
@@ -50,9 +46,9 @@ namespace QuotesWriter.Broker
             this.logger = logger;
             this.subscriber = subscriber;
 
+            // Using default message reader strategy
             subscriber
                   .SetMessageDeserializer(new MessageDeserializer())
-                  .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                   .Subscribe(HandleMessage)
                   .SetLogger(logger);
 

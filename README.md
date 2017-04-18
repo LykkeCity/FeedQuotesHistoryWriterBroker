@@ -42,6 +42,10 @@ The broker writes logs to the
 
 If the table does not exist the broker creates it.
 
+## Queues
+
+The broker creates queue with name `lykke.quotefeed.tickhistory`.
+
 ## Start
 
 On successful start the broker creates several log records with `level="Info"` to inform that it is up & running.

@@ -28,7 +28,7 @@
     "Lykke.AzureStorage": "1.2.18",
     "Lykke.Common": "1.1.67",
     "Lykke.Logs": "1.0.14",
-    "Lykke.RabbitMqBroker": "1.0.59",
+    "Lykke.RabbitMqBroker": "1.0.62",
     "Flurl.Http": "1.1.2"
   },
 

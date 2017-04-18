@@ -32,10 +32,13 @@ namespace QuotesWriter.Broker
         public void ConfigureServices(ContainerBuilder builder, ILog log)
         {
             var mq = settings.FeedQuotesHistoryWriterBroker.RabbitMq;
-            RabbitMqSettings subscriberSettings = new RabbitMqSettings()
+            
+            RabbitMqSubscriberSettings subscriberSettings = new RabbitMqSubscriberSettings()
             {
                 ConnectionString = $"amqp://{mq.Username}:{mq.Password}@{mq.Host}:{mq.Port}",
-                QueueName = mq.QuoteFeed
+                QueueName = mq.QuoteFeed + ".tickhistory",
+                ExchangeName = mq.QuoteFeed,
+                IsDurable = true
             };
 
             var subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings);
