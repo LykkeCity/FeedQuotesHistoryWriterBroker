@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using Common;
+using FeedQuotesHistoryWriterBroker.Core;
 using Lykke.Domain.Prices.Contracts;
 
-using QuotesWriter.Core;
-
-namespace AzureRepositories.Quotes
+namespace FeedQuotesHistoryWriterBroker.Repositories
 {
     public class QuoteHistoryRepository : IQuoteHistoryRepository
     {

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Moq;
-using Xunit;
 using Common.Log;
+using FeedQuotesHistoryWriterBroker.Core;
 using Lykke.Domain.Prices.Contracts;
 using Lykke.Domain.Prices.Model;
+using Moq;
+using Xunit;
 
-namespace QuotesWriter.Core.Tests
+namespace FeedQuotesHistoryWriterBroker.Tests
 {
     public class ControllerTests
     {

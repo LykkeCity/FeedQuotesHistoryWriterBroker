@@ -1,14 +1,15 @@
 ﻿using System;
-using Flurl.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Application;
 using Common.Log;
+using FeedQuotesHistoryWriterBroker.Settings;
+using Flurl.Http;
 using Lykke.Logs;
 using Lykke.SlackNotification.AzureQueue;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace QuotesWriter.Broker
+namespace FeedQuotesHistoryWriterBroker
 {
     public class Program
     {

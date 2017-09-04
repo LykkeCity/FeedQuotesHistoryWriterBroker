@@ -6,15 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QuotesWriter.Core\QuotesWriter.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Lykke.AzureStorage" Version="1.2.36" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FeedQuotesHistoryWriterBroker.Core\FeedQuotesHistoryWriterBroker.Core.csproj" />
   </ItemGroup>
 
 </Project>

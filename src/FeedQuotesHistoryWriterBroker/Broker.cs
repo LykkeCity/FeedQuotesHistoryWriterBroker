@@ -4,12 +4,12 @@ using Autofac;
 using Common;
 using Common.Abstractions;
 using Common.Log;
+using FeedQuotesHistoryWriterBroker.Core;
+using FeedQuotesHistoryWriterBroker.Serialization;
 using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker.Subscriber;
-using QuotesWriter.Broker.Serialization;
-using QuotesWriter.Core;
 
-namespace QuotesWriter.Broker
+namespace FeedQuotesHistoryWriterBroker
 {
     internal sealed class Broker : TimerPeriod, IPersistent
     {

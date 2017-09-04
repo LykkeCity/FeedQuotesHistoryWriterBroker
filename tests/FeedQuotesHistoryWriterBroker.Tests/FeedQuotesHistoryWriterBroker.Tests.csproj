@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AzureRepositories.Quotes\AzureRepositories.Quotes.csproj" />
+    <ProjectReference Include="..\..\src\FeedQuotesHistoryWriterBroker.Core\FeedQuotesHistoryWriterBroker.Core.csproj" />
+    <ProjectReference Include="..\..\src\FeedQuotesHistoryWriterBroker.Repositories\FeedQuotesHistoryWriterBroker.Repositories.csproj" />
   </ItemGroup>
 
 </Project>

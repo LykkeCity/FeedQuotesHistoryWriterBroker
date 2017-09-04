@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
+using Common;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
-using Lykke.Domain.Prices.Contracts;
-using System.Text;
 using Newtonsoft.Json;
-using Common;
 
-namespace AzureRepositories.Quotes
+namespace FeedQuotesHistoryWriterBroker.Repositories
 {
     public class QuoteTableEntity : ITableEntity
     {

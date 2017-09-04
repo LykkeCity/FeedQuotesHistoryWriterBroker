@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
+using FeedQuotesHistoryWriterBroker.Repositories;
+using Lykke.Domain.Prices.Model;
 using Microsoft.WindowsAzure.Storage.Table;
 using Xunit;
-using AzureRepositories.Quotes;
-using Lykke.Domain.Prices.Model;
 
-namespace QuotesWriter.IntegrationTests
+namespace FeedQuotesHistoryWriterBroker.Tests
 {
     public class QuoteHistoryRepositoryTests
     {

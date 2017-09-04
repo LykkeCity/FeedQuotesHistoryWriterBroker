@@ -5,12 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-
 using Common;
 using Common.Log;
 using Lykke.Domain.Prices.Model;
 
-namespace QuotesWriter.Core
+namespace FeedQuotesHistoryWriterBroker.Core
 {
     public class Controller
     {

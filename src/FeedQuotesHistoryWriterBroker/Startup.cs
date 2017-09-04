@@ -1,16 +1,17 @@
 ﻿using System;
 using Autofac;
 using AzureStorage.Tables;
-using AzureRepositories.Quotes;
 using Common;
 using Common.Abstractions;
 using Common.Log;
+using FeedQuotesHistoryWriterBroker.Core;
+using FeedQuotesHistoryWriterBroker.Repositories;
+using FeedQuotesHistoryWriterBroker.Settings;
 using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
-using QuotesWriter.Core;
 
-namespace QuotesWriter.Broker
+namespace FeedQuotesHistoryWriterBroker
 {
     internal class Startup
     {

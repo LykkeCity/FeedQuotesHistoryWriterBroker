@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lykke.Domain.Prices.Contracts;
 
-namespace QuotesWriter.Core
+namespace FeedQuotesHistoryWriterBroker.Core
 {
     public interface IQuoteHistoryRepository
     {

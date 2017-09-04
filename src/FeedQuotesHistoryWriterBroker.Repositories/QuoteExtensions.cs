@@ -1,10 +1,7 @@
-﻿using Lykke.Domain.Prices.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
+using Lykke.Domain.Prices.Contracts;
 
-namespace AzureRepositories.Quotes
+namespace FeedQuotesHistoryWriterBroker.Repositories
 {
     public static class QuoteExtensions
     {

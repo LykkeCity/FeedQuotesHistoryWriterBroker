@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Lykke.Domain.Prices.Contracts;
 using Newtonsoft.Json;
 
-namespace AzureRepositories.Quotes
+namespace FeedQuotesHistoryWriterBroker.Repositories
 {
     public class QuoteItem : IQuote
     {

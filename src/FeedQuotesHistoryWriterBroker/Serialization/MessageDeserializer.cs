@@ -1,10 +1,9 @@
-﻿using System;
-using System.Text;
-using Newtonsoft.Json;
-using Lykke.RabbitMqBroker.Subscriber;
+﻿using System.Text;
 using Lykke.Domain.Prices.Model;
+using Lykke.RabbitMqBroker.Subscriber;
+using Newtonsoft.Json;
 
-namespace QuotesWriter.Broker.Serialization
+namespace FeedQuotesHistoryWriterBroker.Serialization
 {
     public class MessageDeserializer : IMessageDeserializer<Quote>
     {
