@@ -12,7 +12,10 @@
     <None Update="appsettings.json;appsettings.development.json;appsettings.production.json;appsettings.staging.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="..\..\dockerfile">
+  </ItemGroup>
+  
+    <ItemGroup>
+    <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
