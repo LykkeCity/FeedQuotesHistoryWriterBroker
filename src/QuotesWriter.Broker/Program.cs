@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Flurl.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-
 using AzureStorage.Tables;
 using Common.Application;
 using Common.Log;
@@ -19,15 +14,15 @@ namespace QuotesWriter.Broker
     {
         public static void Main(string[] args)
         {
-            // Initialize logger
+            var log = new AggregateLogger();
             var consoleLog = new LogToConsole();
-            var logAggregate = new LogAggregate()
-                .AddLogger(consoleLog);
-            var log = logAggregate.CreateLogger();
 
+            log.AddLog(consoleLog);
+;
             try
             {
                 log.Info("Reading application settings.");
+
                 var config = new ConfigurationBuilder()
                     //.AddJsonFile("appsettings.json", optional: true)
                     .AddEnvironmentVariables()
@@ -39,15 +34,15 @@ namespace QuotesWriter.Broker
                 var appSettings = LoadSettings(settingsUrl);
 
                 log.Info("Initializing azure/slack logger.");
+
                 var services = new ServiceCollection(); // only used for azure logger
-                logAggregate.ConfigureAzureLogger(services, Startup.ApplicationName, appSettings);
 
-                log = logAggregate.CreateLogger();
-
+                UseLogWithSlack(services, appSettings, log, consoleLog);
+                
                 // After log is configured
                 //
                 log.Info("Creating Startup.");
-                var startup = new Startup(appSettings, log);
+                var startup = new Startup(appSettings);
 
                 log.Info("Configure startup services.");
                 startup.ConfigureServices(Application.Instance.ContainerBuilder, log);
@@ -73,20 +68,40 @@ namespace QuotesWriter.Broker
         {
             return url.GetJsonAsync<AppSettings>().Result;
         }
+
+        private static void UseLogWithSlack(IServiceCollection services, AppSettings settings, AggregateLogger aggregateLog, ILog consoleLog)
+        {
+            // Creating slack notification service, which logs own azure queue processing messages to aggregate log
+            var slackService = services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue, aggregateLog);
+            var dbLogConnectionString = settings.FeedQuotesHistoryWriterBroker.ConnectionStrings.LogsConnectionString;
+
+            // Creating azure storage logger, which logs own messages to concole log
+            if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
+            {
+                var appName = Startup.ApplicationName;
+
+                var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
+                    appName,
+                    AzureTableStorage<LogEntity>.Create(() => dbLogConnectionString, $"{appName}Logs", consoleLog),
+                    consoleLog);
+
+                var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(appName, slackService, consoleLog);
+
+                var azureStorageLogger = new LykkeLogToAzureStorage(
+                    appName,
+                    persistenceManager,
+                    slackNotificationsManager,
+                    consoleLog);
+
+                azureStorageLogger.Start();
+
+                aggregateLog.AddLog(azureStorageLogger);
+            }
+        }
     }
 
     internal static class LogExtensions
     {
-        public static void ConfigureAzureLogger(this LogAggregate logAggregate, IServiceCollection services, string appName, AppSettings appSettings)
-        {
-            var log = logAggregate.CreateLogger();
-            var slackSender = services.UseSlackNotificationsSenderViaAzureQueue(appSettings.SlackNotifications.AzureQueue, log);
-            var azureLog = new LykkeLogToAzureStorage(appName,
-                new AzureTableStorage<LogEntity>(appSettings.FeedQuotesHistoryWriterBroker.ConnectionStrings.LogsConnectionString, appName + "Logs", log),
-                slackSender);
-            logAggregate.AddLogger(azureLog);
-        }
-
         public static void Info(this ILog log, string info)
         {
             log.WriteInfoAsync("FeedQuotesHistoryWriterBroker", "Program", string.Empty, info).Wait();

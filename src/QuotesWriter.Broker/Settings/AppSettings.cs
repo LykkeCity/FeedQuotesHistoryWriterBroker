@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Lykke.AzureQueueIntegration;
+﻿using Lykke.AzureQueueIntegration;
 
 namespace QuotesWriter.Broker
 {
@@ -19,11 +15,9 @@ namespace QuotesWriter.Broker
 
         public class RabbitMqSettings
         {
-            public string Host { get; set; }
-            public int Port { get; set; }
-            public string Username { get; set; }
-            public string Password { get; set; }
-            public string QuoteFeed { get; set; }
+            public string ConnectionString { get; set; }
+            public string QuoteFeedExchangeName { get; set; }
+            public string DeadLetterExchangeName { get; set; }
         }
 
         public class ConnectionStringsSettings

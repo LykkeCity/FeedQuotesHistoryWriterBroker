@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:latest
+FROM microsoft/dotnet:2.0-runtime
 ARG SOURCEDIR
 WORKDIR /brocker
 COPY ${SOURCEDIR} .

@@ -1,40 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-
 using Common;
 using Common.Abstractions;
 using Common.Log;
 using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker.Subscriber;
-
 using QuotesWriter.Broker.Serialization;
 using QuotesWriter.Core;
-using Lykke.Domain.Prices.Contracts;
 
 namespace QuotesWriter.Broker
 {
     internal sealed class Broker : TimerPeriod, IPersistent
     {
-        private readonly static string COMPONENT_NAME = "FeedQuotesHistoryWriterBroker";
+        private static readonly string COMPONENT_NAME = "FeedQuotesHistoryWriterBroker";
 
-        private RabbitMqSubscriber<Quote> subscriber;
-        private Controller controller;
-        private ILog logger;
+        private readonly Controller _controller;
+        private readonly ILog _logger;
 
-        private ILifetimeScope scope;
+        private ILifetimeScope _scope;
         public ILifetimeScope Scope
         {
             get
             {
-                return this.scope;
+                return _scope;
             }
             set
             {
-                this.scope = value;
-                this.controller.Scope = scope;
+                _scope = value;
+                _controller.Scope = _scope;
             }
         }
 
@@ -43,39 +37,41 @@ namespace QuotesWriter.Broker
             ILog logger)
             : base(COMPONENT_NAME, (int)TimeSpan.FromMinutes(1).TotalMilliseconds, logger)
         {
-            this.logger = logger;
-            this.subscriber = subscriber;
+            _logger = logger;
 
             // Using default message reader strategy
             subscriber
-                  .SetMessageDeserializer(new MessageDeserializer())
-                  .Subscribe(HandleMessage)
-                  .SetLogger(logger);
+                .SetMessageDeserializer(new MessageDeserializer())
+                .Subscribe(HandleMessage)
+                .SetMessageReadStrategy(new MessageReadQueueStrategy())
+                .CreateDefaultBinding()
+                .SetLogger(logger)
+                .Start();
 
-            this.controller = new Controller(logger, COMPONENT_NAME);
+            _controller = new Controller(logger, COMPONENT_NAME);
         }
 
         private async Task HandleMessage(Quote quote)
         {
             if (quote != null)
             {
-                await this.controller.ConsumeQuote(quote);
+                await _controller.ConsumeQuote(quote);
             }
             else
             {
-                await this.logger.WriteWarningAsync(COMPONENT_NAME, string.Empty, string.Empty, "Received quote <NULL>.");
+                await _logger.WriteWarningAsync(COMPONENT_NAME, string.Empty, string.Empty, "Received quote <NULL>.");
             }
         }
 
         public override async Task Execute()
         {
-            await this.controller.Tick();
+            await _controller.Tick();
         }
 
         public async Task Save()
         {
             // Persist all remaining intervals
-            await this.controller.Tick();
+            await _controller.Tick();
         }
     }
 }

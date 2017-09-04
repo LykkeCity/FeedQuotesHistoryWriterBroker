@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Autofac;
-using Newtonsoft.Json;
-
 using AzureStorage.Tables;
 using AzureRepositories.Quotes;
 using Common;
@@ -19,34 +14,40 @@ namespace QuotesWriter.Broker
 {
     internal class Startup
     {
-        private AppSettings settings;
-        private Broker broker = null;
+        private readonly AppSettings _settings;
+        private Broker _broker;
 
-        public static string ApplicationName { get { return "FeedQuotesHistoryWriterBroker"; } }
+        public static string ApplicationName => "FeedQuotesHistoryWriterBroker";
 
-        public Startup(AppSettings settings, ILog log)
+        public Startup(AppSettings settings)
         {
-            this.settings = settings;
+            _settings = settings;
         }
 
         public void ConfigureServices(ContainerBuilder builder, ILog log)
         {
-            var mq = settings.FeedQuotesHistoryWriterBroker.RabbitMq;
-            
-            RabbitMqSubscriberSettings subscriberSettings = new RabbitMqSubscriberSettings()
+            var mq = _settings.FeedQuotesHistoryWriterBroker.RabbitMq;
+
+            var subscriberSettings = new RabbitMqSubscriptionSettings
             {
-                ConnectionString = $"amqp://{mq.Username}:{mq.Password}@{mq.Host}:{mq.Port}",
-                QueueName = mq.QuoteFeed + ".tickhistory",
-                ExchangeName = mq.QuoteFeed,
-                IsDurable = true
+                ConnectionString = mq.ConnectionString,
+                QueueName = mq.QuoteFeedExchangeName + ".tickhistory",
+                ExchangeName = mq.QuoteFeedExchangeName,
+                DeadLetterExchangeName = mq.DeadLetterExchangeName,
+                IsDurable = true,
+                RoutingKey = ""
             };
 
-            var subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings);
-            this.broker = new Broker(subscriber, log);
+            var subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings, 
+                new ResilientErrorHandlingStrategy(log, subscriberSettings,
+                retryTimeout: TimeSpan.FromSeconds(10),
+                next: new DeadQueueErrorHandlingStrategy(log, subscriberSettings)));
+
+            _broker = new Broker(subscriber, log);
 
             builder.Register(c => new QuoteHistoryRepository(
-                new AzureTableStorage<QuoteTableEntity>(
-                        settings.FeedQuotesHistoryWriterBroker.ConnectionStrings.HistoryConnectionString,
+                AzureTableStorage<QuoteTableEntity>.Create(
+                        () => _settings.FeedQuotesHistoryWriterBroker.ConnectionStrings.HistoryConnectionString,
                         "QuotesHistory", log)
                 )).As<IQuoteHistoryRepository>();
 
@@ -54,7 +55,7 @@ namespace QuotesWriter.Broker
                 .As<IStartable>()
                 .As<IStopable>();
 
-            builder.RegisterInstance(this.broker)
+            builder.RegisterInstance(_broker)
                 .As<IStartable>()
                 .As<IStopable>()
                 .As<IPersistent>();
@@ -62,7 +63,7 @@ namespace QuotesWriter.Broker
 
         public void Configure(ILifetimeScope scope)
         {
-            this.broker.Scope = scope;
+            _broker.Scope = scope;
         }
     }
 }
