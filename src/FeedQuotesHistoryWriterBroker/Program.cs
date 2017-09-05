@@ -29,7 +29,7 @@ namespace FeedQuotesHistoryWriterBroker
                     .AddEnvironmentVariables()
                     .Build();
 
-                var settingsUrl = config.GetValue<string>("BROKER_SETTINGS_URL");
+                var settingsUrl = config.GetValue<string>("SettingsUrl");
 
                 log.Info("Loading app settings from web-site.");
                 var appSettings = LoadSettings(settingsUrl);
