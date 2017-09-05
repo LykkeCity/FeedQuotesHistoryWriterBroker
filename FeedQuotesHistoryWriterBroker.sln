@@ -3,16 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{38ACC085-86A1-40B0-883A-2BC0E7C22867}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Core", "2. Core", "{38ACC085-86A1-40B0-883A-2BC0E7C22867}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15DFAD41-427B-47FC-8FC7-692E1075EBDF}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Solution Items", "1. Solution Items", "{15DFAD41-427B-47FC-8FC7-692E1075EBDF}"
 	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
-		Dockerfile = Dockerfile
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D2EDB80B-11D0-48FE-918B-84BB09192E64}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Tests", "4. Tests", "{D2EDB80B-11D0-48FE-918B-84BB09192E64}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeedQuotesHistoryWriterBroker.Tests", "tests\FeedQuotesHistoryWriterBroker.Tests\FeedQuotesHistoryWriterBroker.Tests.csproj", "{9978C330-D010-47D5-91D6-49786B3A7487}"
 EndProject
@@ -21,6 +19,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeedQuotesHistoryWriterBroker.Core", "src\FeedQuotesHistoryWriterBroker.Core\FeedQuotesHistoryWriterBroker.Core.csproj", "{11661DA4-FE90-4E90-8099-D00AF1A21F02}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeedQuotesHistoryWriterBroker.Repositories", "src\FeedQuotesHistoryWriterBroker.Repositories\FeedQuotesHistoryWriterBroker.Repositories.csproj", "{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeedQuotesHistoryWriterBroker.Services", "src\FeedQuotesHistoryWriterBroker.Services\FeedQuotesHistoryWriterBroker.Services.csproj", "{A7943D63-EBFF-41D5-92FC-534F6113D05B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Repositories", "3. Repositories", "{85B42BC8-3514-4C53-8314-96940E130462}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,15 +46,19 @@ Global
 		{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7943D63-EBFF-41D5-92FC-534F6113D05B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7943D63-EBFF-41D5-92FC-534F6113D05B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7943D63-EBFF-41D5-92FC-534F6113D05B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7943D63-EBFF-41D5-92FC-534F6113D05B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9978C330-D010-47D5-91D6-49786B3A7487} = {D2EDB80B-11D0-48FE-918B-84BB09192E64}
-		{CF762440-E490-4037-8BE3-9063A77761F6} = {38ACC085-86A1-40B0-883A-2BC0E7C22867}
 		{11661DA4-FE90-4E90-8099-D00AF1A21F02} = {38ACC085-86A1-40B0-883A-2BC0E7C22867}
-		{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8} = {38ACC085-86A1-40B0-883A-2BC0E7C22867}
+		{6FBB1238-760E-4B3C-B97F-92D3F49D8EE8} = {85B42BC8-3514-4C53-8314-96940E130462}
+		{A7943D63-EBFF-41D5-92FC-534F6113D05B} = {38ACC085-86A1-40B0-883A-2BC0E7C22867}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD83E4F6-73A3-4CBA-B576-C9B677513C0D}

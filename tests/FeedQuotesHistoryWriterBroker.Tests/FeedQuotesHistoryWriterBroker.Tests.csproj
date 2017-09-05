@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FeedQuotesHistoryWriterBroker.Core\FeedQuotesHistoryWriterBroker.Core.csproj" />
     <ProjectReference Include="..\..\src\FeedQuotesHistoryWriterBroker.Repositories\FeedQuotesHistoryWriterBroker.Repositories.csproj" />
+    <ProjectReference Include="..\..\src\FeedQuotesHistoryWriterBroker.Services\FeedQuotesHistoryWriterBroker.Services.csproj" />
   </ItemGroup>
 
 </Project>

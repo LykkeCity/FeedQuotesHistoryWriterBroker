@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AzureStorage;
 using Common;
 using FeedQuotesHistoryWriterBroker.Core;
+using FeedQuotesHistoryWriterBroker.Core.Domain.Quotes;
 using Lykke.Domain.Prices.Contracts;
 
 namespace FeedQuotesHistoryWriterBroker.Repositories

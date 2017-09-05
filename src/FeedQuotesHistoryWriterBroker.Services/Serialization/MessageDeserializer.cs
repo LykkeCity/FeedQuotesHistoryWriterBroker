@@ -3,7 +3,7 @@ using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker.Subscriber;
 using Newtonsoft.Json;
 
-namespace FeedQuotesHistoryWriterBroker.Serialization
+namespace FeedQuotesHistoryWriterBroker.Services.Serialization
 {
     public class MessageDeserializer : IMessageDeserializer<Quote>
     {

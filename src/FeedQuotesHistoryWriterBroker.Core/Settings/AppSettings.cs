@@ -1,8 +1,8 @@
 ﻿using Lykke.AzureQueueIntegration;
 
-namespace FeedQuotesHistoryWriterBroker.Settings
+namespace FeedQuotesHistoryWriterBroker.Core.Settings
 {
-    internal class AppSettings
+    public class AppSettings
     {
         public SlackNotificationsSettings SlackNotifications { get; set; } = new SlackNotificationsSettings();
         public FeedQuotesHistoryWriterBrokerSettings FeedQuotesHistoryWriterBroker { get; set; } = new FeedQuotesHistoryWriterBrokerSettings();
@@ -29,6 +29,13 @@ namespace FeedQuotesHistoryWriterBroker.Settings
         public class SlackNotificationsSettings
         {
             public AzureQueueSettings AzureQueue { get; set; } = new AzureQueueSettings();
+        }
+
+        public class AzureQueueSettings
+        {
+            public string ConnectionString { get; set; }
+
+            public string QueueName { get; set; }
         }
     }
 }
