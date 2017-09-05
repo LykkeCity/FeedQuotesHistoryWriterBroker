@@ -7,6 +7,7 @@ using FeedQuotesHistoryWriterBroker.Core.Services.Quotes;
 using FeedQuotesHistoryWriterBroker.Core.Settings;
 using FeedQuotesHistoryWriterBroker.Models;
 using FeedQuotesHistoryWriterBroker.Modules;
+using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
@@ -114,7 +115,7 @@ namespace FeedQuotesHistoryWriterBroker
             aggregateLogger.AddLog(consoleLogger);
 
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log
-            var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new Lykke.AzureQueueIntegration.AzureQueueSettings
+            var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
             {
                 ConnectionString = settings.SlackNotifications.AzureQueue.ConnectionString,
                 QueueName = settings.SlackNotifications.AzureQueue.QueueName

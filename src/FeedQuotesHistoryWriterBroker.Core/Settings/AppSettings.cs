@@ -1,6 +1,4 @@
-﻿using Lykke.AzureQueueIntegration;
-
-namespace FeedQuotesHistoryWriterBroker.Core.Settings
+﻿namespace FeedQuotesHistoryWriterBroker.Core.Settings
 {
     public class AppSettings
     {
