@@ -27,7 +27,14 @@ namespace FeedQuotesHistoryWriterBroker.Repositories
 
         public static string RowKey(this IQuote quote)
         {
-            if (quote == null) { throw new ArgumentNullException(nameof(quote)); }
+            if (quote == null)
+            {
+                throw new ArgumentNullException(nameof(quote));
+            }
+            if (quote.Timestamp.Kind != DateTimeKind.Utc)
+            {
+                throw new ArgumentException("Quote timestamp should be UTC", nameof(quote));
+            }
 
             return QuoteTableEntity.GenerateRowKey(quote.Timestamp);
         }

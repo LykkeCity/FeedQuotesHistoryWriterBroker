@@ -26,6 +26,6 @@ namespace FeedQuotesHistoryWriterBroker.Core.Domain.Quotes
         /// <param name="quotes">Collection of quotes to insert/merge</param>
         /// <param name="asset">Asset pair to filter quotes</param>
         /// <param name="isBuy">IsBuy sign to filter quotes</param>
-        Task InsertOrMergeAsync(IEnumerable<IQuote> quotes, string asset, bool isBuy);
+        Task InsertOrMergeAsync(IReadOnlyCollection<IQuote> quotes, string asset, bool isBuy);
     }
 }

@@ -20,7 +20,7 @@ namespace FeedQuotesHistoryWriterBroker.Tests
 
             var repo = new Mock<IQuoteHistoryRepository>();
             repo
-                .Setup(r => r.InsertOrMergeAsync(It.IsAny<IEnumerable<IQuote>>(), It.IsAny<string>(), It.IsAny<bool>()))
+                .Setup(r => r.InsertOrMergeAsync(It.IsAny<IReadOnlyCollection<IQuote>>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .Returns(Task.FromResult(0));
 
             var baseTime = new DateTime(2017, 03, 12, 7, 8, 9, DateTimeKind.Utc);
@@ -42,10 +42,10 @@ namespace FeedQuotesHistoryWriterBroker.Tests
 
             // Verify calls to repository. Repository must be called for each group separately
             //
-            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IEnumerable<IQuote>>(), "EURUSD", true), Times.Once());
-            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IEnumerable<IQuote>>(), "EURUSD", false), Times.Once());
-            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IEnumerable<IQuote>>(), "BTCUSD", true), Times.Once());
-            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IEnumerable<IQuote>>(), "BTCUSD", false), Times.Once());
+            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IReadOnlyCollection<IQuote>>(), "EURUSD", true), Times.Once());
+            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IReadOnlyCollection<IQuote>>(), "EURUSD", false), Times.Once());
+            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IReadOnlyCollection<IQuote>>(), "BTCUSD", true), Times.Once());
+            repo.Verify(r => r.InsertOrMergeAsync(It.IsAny<IReadOnlyCollection<IQuote>>(), "BTCUSD", false), Times.Once());
         }
     }
 }

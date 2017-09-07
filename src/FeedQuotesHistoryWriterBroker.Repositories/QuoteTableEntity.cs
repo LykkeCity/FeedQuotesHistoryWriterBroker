@@ -79,7 +79,7 @@ namespace FeedQuotesHistoryWriterBroker.Repositories
 
         public static string GenerateRowKey(DateTime timestamp)
         {
-            return new DateTime(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, 0, DateTimeKind.Utc).Ticks.ToString("d19");
+            return timestamp.ToString("yyyy-MM-ddTHH:mm:00");
         }
     }
 }

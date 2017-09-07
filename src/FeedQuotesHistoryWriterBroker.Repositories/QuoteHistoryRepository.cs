@@ -42,21 +42,28 @@ namespace FeedQuotesHistoryWriterBroker.Repositories
             await InsertOrMergeAsync(new IQuote[] { quote }, quote.AssetPair, quote.IsBuy);
         }
 
-        public async Task InsertOrMergeAsync(IEnumerable<IQuote> quotes, string asset, bool isBuy)
+        public async Task InsertOrMergeAsync(IReadOnlyCollection<IQuote> quotes, string asset, bool isBuy)
         {
             if (quotes == null) { throw new ArgumentNullException(nameof(quotes)); }
             if (string.IsNullOrEmpty(asset)) { throw new ArgumentNullException(nameof(asset)); }
 
             // Select only quotes with specified asset and buy sign
-            quotes = quotes.Where(q => q.AssetPair == asset && q.IsBuy == isBuy);
-            if (!quotes.Any()) { return; }
+            quotes = quotes
+                .Where(q => q.AssetPair == asset && q.IsBuy == isBuy)
+                .ToArray();
+            if (!quotes.Any())
+            {
+                return;
+            }
 
             string partitionKey = QuoteTableEntity.GeneratePartitionKey(asset, isBuy);
 
             var newEntities = new List<QuoteTableEntity>();
 
             // Group quotes by row keys
-            var groups = quotes.GroupBy(candle => candle.RowKey());
+            var groups = quotes
+                .GroupBy(candle => candle.RowKey())
+                .ToArray();
             foreach (var group in groups)
             {
                 var e = new QuoteTableEntity(partitionKey, group.Key);

@@ -112,8 +112,8 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
             var buyQuotes = quotes.Where(q => q.IsBuy);
             var sellQuotes = quotes.Where(q => !q.IsBuy);
 
-            await _repo.InsertOrMergeAsync(buyQuotes, asset, true);
-            await _repo.InsertOrMergeAsync(sellQuotes, asset, false);
+            await _repo.InsertOrMergeAsync(buyQuotes.ToArray(), asset, true);
+            await _repo.InsertOrMergeAsync(sellQuotes.ToArray(), asset, false);
         }
 
         private static ICollection<string> Validate(Quote quote)
