@@ -1,4 +1,6 @@
-﻿namespace FeedQuotesHistoryWriterBroker.Core.Settings
+﻿using System;
+
+namespace FeedQuotesHistoryWriterBroker.Core.Settings
 {
     public class AppSettings
     {
@@ -9,6 +11,7 @@
         {
             public RabbitMqSettings RabbitMq { get; set; } = new RabbitMqSettings();
             public ConnectionStringsSettings ConnectionStrings { get; set; } = new ConnectionStringsSettings();
+            public StorageRetrySettings StorageRetrySettings { get; set; } = new StorageRetrySettings();
         }
 
         public class RabbitMqSettings
@@ -35,5 +38,12 @@
 
             public string QueueName { get; set; }
         }
-    }
+
+        public class StorageRetrySettings
+        {
+            public int OnModificationsRetryCount { get; set; }
+            public int OnGettingRetryCount { get; set; }
+            public TimeSpan RetryDelay { get; set; }
+        }
+    }    
 }

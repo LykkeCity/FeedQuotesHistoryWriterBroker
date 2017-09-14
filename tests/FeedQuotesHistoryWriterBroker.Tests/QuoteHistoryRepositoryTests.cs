@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using AzureStorage;
 using AzureStorage.Tables;
+using AzureStorage.Tables.Decorators;
+using Castle.Core.Logging;
 using Common.Log;
 using FeedQuotesHistoryWriterBroker.Repositories;
+using Lykke.AzureStorage;
 using Lykke.Domain.Prices.Model;
 using Microsoft.WindowsAzure.Storage.Table;
 using Xunit;
@@ -110,7 +113,7 @@ namespace FeedQuotesHistoryWriterBroker.Tests
             Assert.Equal(2000, storedQuotes.Count());
             Assert.Equal(0, log.Count);
         }
-
+        
         private INoSQLTableStorage<T> CreateStorage<T>(ILog logger, bool clear = true) where T : class, ITableEntity, new()
         {
             //var table = new AzureTableStorage<T>("UseDevelopmentStorage=true;", "QuotesHistoryTest", logger);
