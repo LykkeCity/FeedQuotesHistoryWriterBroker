@@ -41,29 +41,43 @@ namespace FeedQuotesHistoryWriterBroker
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .AddJsonOptions(options =>
+            try
+            {
+                services.AddMvc()
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.ContractResolver =
+                            new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    });
+
+                services.AddSwaggerGen(options =>
                 {
-                    options.SerializerSettings.ContractResolver =
-                        new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    options.DefaultLykkeConfiguration("v1", "FeedQuotesHistoryWriterBroker API");
                 });
 
-            services.AddSwaggerGen(options =>
+                var builder = new ContainerBuilder();
+                var appSettings = Configuration.LoadSettings<AppSettings>();
+                Log = CreateLogWithSlack(services, appSettings);
+
+                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.FeedQuotesHistoryWriterBroker), Log));
+
+                builder.Populate(services);
+
+                ApplicationContainer = builder.Build();
+
+                return new AutofacServiceProvider(ApplicationContainer);
+            }
+            catch (Exception ex)
             {
-                options.DefaultLykkeConfiguration("v1", "FeedQuotesHistoryWriterBroker API");
-            });
+                Log?.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
 
-            var builder = new ContainerBuilder();
-            var appSettings = Configuration.LoadSettings<AppSettings>();
-            Log = CreateLogWithSlack(services, appSettings);
+                if (Log == null)
+                {
+                    Console.WriteLine(ex);
+                }
 
-            builder.RegisterModule(new JobModule(appSettings.Nested(x => x.FeedQuotesHistoryWriterBroker), Log));
-
-            builder.Populate(services);
-
-            ApplicationContainer = builder.Build();
-
-            return new AutofacServiceProvider(ApplicationContainer);
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
@@ -86,22 +100,36 @@ namespace FeedQuotesHistoryWriterBroker
 
         private void StopApplication()
         {
-            Console.WriteLine("Stopping...");
+            try
+            {
+                Console.WriteLine("Stopping...");
 
-            var broker = ApplicationContainer.Resolve<IQuotesBroker>();
+                var broker = ApplicationContainer.Resolve<IQuotesBroker>();
 
-            broker.Stop();
+                broker.Stop();
 
-            Console.WriteLine("Stopped");
+                Console.WriteLine("Stopped");
+            }
+            catch (Exception ex)
+            {
+                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+            }
         }
 
         private void CleanUp()
         {
-            Console.WriteLine("Cleaning up...");
+            try
+            {
+                Console.WriteLine("Cleaning up...");
 
-            ApplicationContainer.Dispose();
+                ApplicationContainer.Dispose();
 
-            Console.WriteLine("Cleaned up");
+                Console.WriteLine("Cleaned up");
+            }
+            catch (Exception ex)
+            {
+                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+            }
         }
 
         private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
