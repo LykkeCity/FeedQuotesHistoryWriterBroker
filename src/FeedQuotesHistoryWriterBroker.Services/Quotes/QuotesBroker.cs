@@ -30,6 +30,10 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
                 .MakeDurable()
                 .DelayTheRecconectionForA(delay: TimeSpan.FromSeconds(20));
 
+            // HACK: Initially exchange was named not according to the pattern,
+            // so preserving old name since dlx renaming is not trivial
+            subscriberSettings.DeadLetterExchangeName = "lykke.quotefeed.quoteshistory.dlx";
+
             _subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings,
                     new ResilientErrorHandlingStrategy(_log, subscriberSettings,
                         retryTimeout: TimeSpan.FromSeconds(10),
