@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using FeedQuotesHistoryWriterBroker.Core.Services.Quotes;
-using FeedQuotesHistoryWriterBroker.Core.Settings;
 using FeedQuotesHistoryWriterBroker.Services.Serialization;
 using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker;
@@ -19,22 +18,17 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
 
         public QuotesBroker(
             IQuotesManager quotesManager,
-            AppSettings.RabbitMqSettings rabbitSettings,
+            string rabbitConnectionString,
             ILog log)
             : base(nameof(QuotesBroker), (int)TimeSpan.FromMinutes(1).TotalMilliseconds, log)
         {
             _quotesManager = quotesManager;
             _log = log;
 
-            var subscriberSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = rabbitSettings.ConnectionString,
-                QueueName = rabbitSettings.QuoteFeedExchangeName + ".quoteshistory",
-                ExchangeName = rabbitSettings.QuoteFeedExchangeName,
-                DeadLetterExchangeName = rabbitSettings.DeadLetterExchangeName,
-                IsDurable = true,
-                RoutingKey = ""
-            };
+            var subscriberSettings = RabbitMqSubscriptionSettings
+                .CreateForSubscriber(rabbitConnectionString, "quotefeed", "quoteshistory")
+                .MakeDurable()
+                .DelayTheRecconectionForA(delay: TimeSpan.FromSeconds(20));
 
             _subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings,
                     new ResilientErrorHandlingStrategy(_log, subscriberSettings,
@@ -50,7 +44,7 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
 
         public override void Stop()
         {
-            _subscriber.Stop();
+            _subscriber?.Stop();
 
             base.Stop();
 

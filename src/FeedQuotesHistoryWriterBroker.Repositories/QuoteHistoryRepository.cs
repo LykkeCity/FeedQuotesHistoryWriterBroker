@@ -87,7 +87,7 @@ namespace FeedQuotesHistoryWriterBroker.Repositories
             //
             foreach(var entity in entitites)
             {
-                var existingEntity = existingEntities.Where(e => e.PartitionKey == entity.PartitionKey && e.RowKey == entity.RowKey).FirstOrDefault();
+                var existingEntity = existingEntities.FirstOrDefault(e => e.PartitionKey == entity.PartitionKey && e.RowKey == entity.RowKey);
                 if (existingEntity == null)
                 {
                     existingEntities.Add(entity);
