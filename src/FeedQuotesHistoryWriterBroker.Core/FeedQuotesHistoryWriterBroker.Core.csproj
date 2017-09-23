@@ -7,17 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.Domain.Prices" Version="0.9.11" />
-    <PackageReference Include="Lykke.Common" Version="1.1.95" />
+    <PackageReference Include="Lykke.Common" Version="1.1.97" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Properties\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Lykke.AzureQueueIntegration">
-      <HintPath>..\..\..\..\..\Users\krya\.nuget\packages\lykke.azurequeueintegration\1.0.7\lib\netcoreapp1.1\Lykke.AzureQueueIntegration.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

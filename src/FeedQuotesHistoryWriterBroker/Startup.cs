@@ -23,50 +23,59 @@ namespace FeedQuotesHistoryWriterBroker
     public class Startup
     {
         public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; set; }
+        public IContainer ApplicationContainer { get; private set; }
         public IConfigurationRoot Configuration { get; }
+        public ILog Log { get; private set; }
 
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
             Environment = env;
-
-            Console.WriteLine($"ENV_INFO: {System.Environment.GetEnvironmentVariable("ENV_INFO")}");
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .AddJsonOptions(options =>
+            try
+            {
+                services.AddMvc()
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.ContractResolver =
+                            new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    });
+
+                services.AddSwaggerGen(options =>
                 {
-                    options.SerializerSettings.ContractResolver =
-                        new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    options.DefaultLykkeConfiguration("v1", "FeedQuotesHistoryWriterBroker API");
                 });
 
-            services.AddSwaggerGen(options =>
+                var builder = new ContainerBuilder();
+                var appSettings = Configuration.LoadSettings<AppSettings>();
+                Log = CreateLogWithSlack(services, appSettings);
+
+                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.FeedQuotesHistoryWriterBroker), Log));
+
+                builder.Populate(services);
+
+                ApplicationContainer = builder.Build();
+
+                return new AutofacServiceProvider(ApplicationContainer);
+            }
+            catch (Exception ex)
             {
-                options.DefaultLykkeConfiguration("v1", "FeedQuotesHistoryWriterBroker API");
-            });
+                Log?.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
 
-            var builder = new ContainerBuilder();
-            var appSettings = Environment.IsDevelopment()
-                ? Configuration.Get<AppSettings>()
-                : HttpSettingsLoader.Load<AppSettings>(Configuration.GetValue<string>("SettingsUrl"));
-            var log = CreateLogWithSlack(services, appSettings);
+                if (Log == null)
+                {
+                    Console.WriteLine(ex);
+                }
 
-            builder.RegisterModule(new JobModule(appSettings, log));
-
-            builder.Populate(services);
-
-            ApplicationContainer = builder.Build();
-
-            return new AutofacServiceProvider(ApplicationContainer);
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
@@ -89,25 +98,39 @@ namespace FeedQuotesHistoryWriterBroker
 
         private void StopApplication()
         {
-            Console.WriteLine("Stopping...");
+            try
+            {
+                Console.WriteLine("Stopping...");
 
-            var broker = ApplicationContainer.Resolve<IQuotesBroker>();
+                var broker = ApplicationContainer.Resolve<IQuotesBroker>();
 
-            broker.Stop();
+                broker.Stop();
 
-            Console.WriteLine("Stopped");
+                Console.WriteLine("Stopped");
+            }
+            catch (Exception ex)
+            {
+                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+            }
         }
 
         private void CleanUp()
         {
-            Console.WriteLine("Cleaning up...");
+            try
+            {
+                Console.WriteLine("Cleaning up...");
 
-            ApplicationContainer.Dispose();
+                ApplicationContainer.Dispose();
 
-            Console.WriteLine("Cleaned up");
+                Console.WriteLine("Cleaned up");
+            }
+            catch (Exception ex)
+            {
+                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+            }
         }
 
-        private static ILog CreateLogWithSlack(IServiceCollection services, AppSettings settings)
+        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
         {
             var consoleLogger = new LogToConsole();
             var aggregateLogger = new AggregateLogger();
@@ -117,11 +140,12 @@ namespace FeedQuotesHistoryWriterBroker
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log
             var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
             {
-                ConnectionString = settings.SlackNotifications.AzureQueue.ConnectionString,
-                QueueName = settings.SlackNotifications.AzureQueue.QueueName
+                ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
             }, aggregateLogger);
 
-            var dbLogConnectionString = settings.FeedQuotesHistoryWriterBroker.ConnectionStrings.LogsConnectionString;
+            var dbLogConnectionStringManager = settings.Nested(x => x.FeedQuotesHistoryWriterBroker.ConnectionStrings.LogsConnectionString);
+            var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
 
             // Creating azure storage logger, which logs own messages to concole log
             if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
@@ -130,7 +154,7 @@ namespace FeedQuotesHistoryWriterBroker
 
                 var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
                     appName,
-                    new AzureTableStorage<LogEntity>(dbLogConnectionString, $"{appName}Logs", consoleLogger),
+                    AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "FeedQuotesHistoryWriterBrokerLogs", consoleLogger),
                     consoleLogger);
 
                 var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(appName, slackService, consoleLogger);
@@ -150,4 +174,3 @@ namespace FeedQuotesHistoryWriterBroker
         }
     }
 }
-

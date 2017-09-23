@@ -242,4 +242,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-launchSettings.json
+**/launchSettings.json
+**/appsettings.*.json

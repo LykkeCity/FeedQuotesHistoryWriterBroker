@@ -17,8 +17,6 @@ namespace FeedQuotesHistoryWriterBroker.Core.Settings
         public class RabbitMqSettings
         {
             public string ConnectionString { get; set; }
-            public string QuoteFeedExchangeName { get; set; }
-            public string DeadLetterExchangeName { get; set; }
         }
 
         public class ConnectionStringsSettings
