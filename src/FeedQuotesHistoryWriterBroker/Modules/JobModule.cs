@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Decorators;
 using Common.Log;
 using FeedQuotesHistoryWriterBroker.Core.Domain.Quotes;
 using FeedQuotesHistoryWriterBroker.Core.Services;
@@ -34,15 +33,12 @@ namespace FeedQuotesHistoryWriterBroker.Modules
                 .As<IHealthService>()
                 .SingleInstance();
 
-            var storage = AzureTableStorage<QuoteTableEntity>.Create(
-                _settings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString), "QuotesHistory", _log);
-
-            builder.Register(c => new QuoteHistoryRepository(                
-                new RetryOnFailureAzureTableStorageDecorator<QuoteTableEntity>(
-                    storage, 
-                    _settings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
-                    _settings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
-                    _settings.CurrentValue.StorageRetrySettings.RetryDelay)
+            builder.Register(c => new QuoteHistoryRepository(
+                AzureTableStorage<QuoteTableEntity>.Create(
+                    _settings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString), "QuotesHistory", _log,
+                    onModificationRetryCount:_settings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
+                    onGettingRetryCount:_settings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
+                    retryDelay:_settings.CurrentValue.StorageRetrySettings.RetryDelay)
             )).As<IQuoteHistoryRepository>();
 
             builder.RegisterType<QuotesManager>()
