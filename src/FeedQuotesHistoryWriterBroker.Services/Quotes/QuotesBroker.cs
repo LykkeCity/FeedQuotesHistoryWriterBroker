@@ -36,7 +36,8 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
 
             _subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings,
                     new ResilientErrorHandlingStrategy(_log, subscriberSettings,
-                        retryTimeout: TimeSpan.FromSeconds(10),
+                        retryTimeout: TimeSpan.FromSeconds(5),
+                        retryNum: int.MaxValue,
                         next: new DeadQueueErrorHandlingStrategy(_log, subscriberSettings)))
                 .SetMessageDeserializer(new MessageDeserializer())
                 .Subscribe(HandleMessage)
@@ -58,13 +59,22 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
 
         private async Task HandleMessage(Quote quote)
         {
-            if (quote != null)
+            try
             {
-                await _quotesManager.ConsumeQuote(quote);
+                if (quote != null)
+                {
+                    await _quotesManager.ConsumeQuote(quote);
+                }
+                else
+                {
+                    await _log.WriteWarningAsync(nameof(QuotesBroker), nameof(HandleMessage), string.Empty,
+                        "Received quote <NULL>.");
+                }
             }
-            else
+            catch
             {
-                await _log.WriteWarningAsync(nameof(QuotesBroker), nameof(HandleMessage), string.Empty, "Received quote <NULL>.");
+                await _log.WriteWarningAsync(nameof(QuotesBroker), nameof(HandleMessage), quote.ToJson(), "Failed to process quote");
+                throw;
             }
         }
 
