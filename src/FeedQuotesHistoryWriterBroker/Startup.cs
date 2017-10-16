@@ -87,7 +87,7 @@ namespace FeedQuotesHistoryWriterBroker
             app.UseSwaggerUi();
             app.UseStaticFiles();
 
-            appLifetime.ApplicationStarted.Register(() => StartApplication.Wait());
+            appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
             appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
             appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
         }
