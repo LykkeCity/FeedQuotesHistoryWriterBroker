@@ -36,8 +36,8 @@ namespace FeedQuotesHistoryWriterBroker.Services.Quotes
 
             _subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings,
                     new ResilientErrorHandlingStrategy(_log, subscriberSettings,
-                        retryTimeout: TimeSpan.FromSeconds(5),
-                        retryNum: int.MaxValue,
+                        retryTimeout: TimeSpan.FromSeconds(10),
+                        retryNum: 10,
                         next: new DeadQueueErrorHandlingStrategy(_log, subscriberSettings)))
                 .SetMessageDeserializer(new MessageDeserializer())
                 .Subscribe(HandleMessage)

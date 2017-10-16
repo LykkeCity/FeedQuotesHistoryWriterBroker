@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
@@ -68,12 +69,6 @@ namespace FeedQuotesHistoryWriterBroker
             catch (Exception ex)
             {
                 Log?.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
-
-                if (Log == null)
-                {
-                    Console.WriteLine(ex);
-                }
-
                 throw;
             }
         }
@@ -92,41 +87,58 @@ namespace FeedQuotesHistoryWriterBroker
             app.UseSwaggerUi();
             app.UseStaticFiles();
 
-            appLifetime.ApplicationStopping.Register(StopApplication);
-            appLifetime.ApplicationStopped.Register(CleanUp);
+            appLifetime.ApplicationStarted.Register(() => StartApplication.Wait());
+            appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
+            appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
         }
 
-        private void StopApplication()
+        private async Task StartApplication()
         {
             try
             {
-                Console.WriteLine("Stopping...");
+                await Log.WriteMonitorAsync("", "", "Started");
+            }
+            catch (Exception ex)
+            {
+                await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
+            }
+        }
 
+        private async Task StopApplication()
+        {
+            try
+            {
                 var broker = ApplicationContainer.Resolve<IQuotesBroker>();
 
                 broker.Stop();
-
-                Console.WriteLine("Stopped");
             }
             catch (Exception ex)
             {
-                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StopApplication), "", ex);
+                }
             }
         }
 
-        private void CleanUp()
+        private async Task CleanUp()
         {
             try
             {
-                Console.WriteLine("Cleaning up...");
+                if (Log != null)
+                {
+                    await Log.WriteMonitorAsync("", "", "Terminating");
+                }
 
                 ApplicationContainer.Dispose();
-
-                Console.WriteLine("Cleaned up");
             }
             catch (Exception ex)
             {
-                Log.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
+                    (Log as IDisposable)?.Dispose();
+                }
             }
         }
 
