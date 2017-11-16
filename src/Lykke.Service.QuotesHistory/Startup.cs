@@ -21,12 +21,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Service.QuotesHistory
 {
-    public class Startup
+    internal sealed class Startup
     {
-        public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; private set; }
-        public IConfigurationRoot Configuration { get; }
-        public ILog Log { get; private set; }
+        private IContainer ApplicationContainer { get; set; }
+        private IConfigurationRoot Configuration { get; }
+        private ILog Log { get; set; }
 
         public Startup(IHostingEnvironment env)
         {
@@ -35,7 +34,6 @@ namespace Lykke.Service.QuotesHistory
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
-            Environment = env;
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
@@ -84,12 +82,16 @@ namespace Lykke.Service.QuotesHistory
 
             app.UseMvc();
             app.UseSwagger();
-            app.UseSwaggerUi();
+            app.UseSwaggerUI(x =>
+            {
+                x.RoutePrefix = "swagger/ui";
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
             app.UseStaticFiles();
 
-            appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
-            appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
-            appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
+            appLifetime.ApplicationStarted.Register(() => StartApplication().GetAwaiter().GetResult());
+            appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
+            appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
         }
 
         private async Task StartApplication()
@@ -159,7 +161,7 @@ namespace Lykke.Service.QuotesHistory
             var dbLogConnectionStringManager = settings.Nested(x => x.QuotesHistoryService.ConnectionStrings.LogsConnectionString);
             var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
 
-            // Creating azure storage logger, which logs own messages to concole log
+            // Creating azure storage logger, which logs own messages to console log
             if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
             {
                 var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(

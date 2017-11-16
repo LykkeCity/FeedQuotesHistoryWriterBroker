@@ -4,7 +4,7 @@ using System.Net;
 using Lykke.Service.QuotesHistory.Core.Services;
 using Lykke.Service.QuotesHistory.Models;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.SwaggerGen.Annotations;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Lykke.Service.QuotesHistory.Controllers
 {
