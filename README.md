@@ -1,11 +1,11 @@
-# TickHistoryBroker
-RabbitMQ Broker which writes tick by tick history (quotes).
+# Quotes history service
+The service stores a tick history (quotes) and provides API to read it.
 
-Broker connects to "quotes" queue and writes quote to the storage.
+The service connects to "quotes" queue and writes quotes to the storage.
 
-## Broker settings
+## Settings
 
-The broker uses following sections from global settings:
+The service uses following sections from global settings:
 
 ```
 {
@@ -13,32 +13,18 @@ The broker uses following sections from global settings:
   {
     ...
   },
-  "FeedQuotesHistoryWriterBroker": 
+  "QuotesHistory": 
   {
     ...
   }
 }
 ```
 
-## Docker configuration
-
-The broker requires following sections to be defined in `docker-compose.yml`:
-
-```
-version: '2'
-services:
-  feedquoteshistorywriterbroker:
-    image: lykkex/feedquoteshistorywriterbroker:1.0.0
-    container_name: feedquoteshistorywriterbroker
-    environment:
-      - BROKER_SETTINGS_URL=${SETTINGURL}
-```
-
 ## Logging
 
-The broker writes logs to the 
+The service writes logs to the 
   * Slack thread, and 
-  * Azure table ("FeedQuotesHistoryWriterBrokerLogs").
+  * Azure table ("QuotesHistoryLogs").
 
 If the table does not exist the broker creates it.
 
