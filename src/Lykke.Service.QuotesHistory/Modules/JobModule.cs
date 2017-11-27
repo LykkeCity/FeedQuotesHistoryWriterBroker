@@ -1,6 +1,8 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
+using Lykke.Service.Assets.Client;
 using Lykke.Service.QuotesHistory.Core.Domain.Quotes;
 using Lykke.Service.QuotesHistory.Core.Services;
 using Lykke.Service.QuotesHistory.Core.Services.Quotes;
@@ -33,12 +35,17 @@ namespace Lykke.Service.QuotesHistory.Modules
                 .As<IHealthService>()
                 .SingleInstance();
 
+            builder.RegisterType<AssetsService>()
+                .WithParameter("baseUri", new Uri(_settings.CurrentValue.Services.AssetsServiceUrl))
+                .As<IAssetsService>();
+
             builder.Register(c => new QuoteHistoryRepository(
                 AzureTableStorage<QuoteTableEntity>.Create(
                     _settings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString), "QuotesHistory", _log,
-                    onModificationRetryCount:_settings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
-                    onGettingRetryCount:_settings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
-                    retryDelay:_settings.CurrentValue.StorageRetrySettings.RetryDelay)
+                    onModificationRetryCount: _settings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
+                    onGettingRetryCount: _settings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
+                    retryDelay: _settings.CurrentValue.StorageRetrySettings.RetryDelay,
+                    maxExecutionTimeout: _settings.CurrentValue.StorageRetrySettings.ExecutionTimeout)
             )).As<IQuoteHistoryRepository>();
 
             builder.RegisterType<QuotesManager>()

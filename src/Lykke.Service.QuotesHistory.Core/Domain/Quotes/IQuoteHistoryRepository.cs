@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Lykke.Domain.Prices.Contracts;
 
@@ -12,6 +13,9 @@ namespace Lykke.Service.QuotesHistory.Core.Domain.Quotes
         /// </summary>
         /// <param name="minute">Seconds and milliseconds are not significant.</param>
         Task<IEnumerable<IQuote>> GetQuotesAsync(string asset, bool isBuy, DateTime minute);
+
+
+        Task<IReadOnlyCollection<IQuote>> GetQuotesAsync(DateTime from, DateTime DateTimeOffset, IEnumerable<string> assets, CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts or merges specified quote to the azure table
