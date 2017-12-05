@@ -1,4 +1,6 @@
 ﻿using System;
+using Lykke.Service.Assets.Client;
+using Lykke.Service.Assets.Client.Models;
 
 namespace Lykke.Service.QuotesHistory.Core.Settings
 {
@@ -12,17 +14,12 @@ namespace Lykke.Service.QuotesHistory.Core.Settings
             public RabbitMqSettings RabbitMq { get; set; } = new RabbitMqSettings();
             public ConnectionStringsSettings ConnectionStrings { get; set; } = new ConnectionStringsSettings();
             public StorageRetrySettings StorageRetrySettings { get; set; } = new StorageRetrySettings();
-            public Services Services { get; set; } = new Services();
+            public AssetsSettings Assets { get; set; }
         }
 
         public class RabbitMqSettings
         {
             public string ConnectionString { get; set; }
-        }
-
-        public sealed class Services
-        {
-            public string AssetsServiceUrl { get; set; }
         }
 
         public class ConnectionStringsSettings
@@ -41,6 +38,12 @@ namespace Lykke.Service.QuotesHistory.Core.Settings
             public string ConnectionString { get; set; }
 
             public string QueueName { get; set; }
+        }
+
+        public class AssetsSettings
+        {
+            public string ServiceUrl { get; set; }
+            public TimeSpan CacheExpirationPeriod { get; set; }
         }
 
         public class StorageRetrySettings

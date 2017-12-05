@@ -17,9 +17,9 @@ namespace Lykke.Service.QuotesHistory.Controllers
     public sealed class QuotesHistoryController : Controller
     {
         private readonly IQuoteHistoryRepository _quoteHistoryRepository;
-        private readonly IAssetsService _assetsService;
+        private readonly IAssetsServiceWithCache _assetsService;
 
-        public QuotesHistoryController(IQuoteHistoryRepository quoteHistoryRepository, IAssetsService assetsService)
+        public QuotesHistoryController(IQuoteHistoryRepository quoteHistoryRepository, IAssetsServiceWithCache assetsService)
         {
             _quoteHistoryRepository = quoteHistoryRepository;
             _assetsService = assetsService;
@@ -36,16 +36,15 @@ namespace Lykke.Service.QuotesHistory.Controllers
         /// Returns a list of quotes
         /// </returns>
         [HttpGet]
-        [SwaggerOperation("QuotesHistory")]
+        [SwaggerOperation("GetQuotesHistory")]
         [ProducesResponseType(typeof(IEnumerable<QuoteResponse>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<IEnumerable<QuoteResponse>> GetQuotesHistory([FromQuery] DateTimeOffset from, [FromQuery] DateTimeOffset to, [FromQuery]IReadOnlyCollection<string> id, CancellationTokenSource cts)
         {
             EnsureCorrectDates(from, to);
-            var assetsIds = await GetAssetsIdsAsync(id);
+            var assetsIds = await GetAssetsIdsAsync(id, cts.Token);
             var quotes = await _quoteHistoryRepository.GetQuotesAsync(from.UtcDateTime, to.UtcDateTime, (IReadOnlyCollection<string>)assetsIds, cts.Token);
             var quotesModels = quotes.Select(q => new QuoteResponse(q.AssetPair, q.IsBuy, q.Price, q.Timestamp));
-            GC.Collect();
             return quotesModels;
         }
 
@@ -68,11 +67,11 @@ namespace Lykke.Service.QuotesHistory.Controllers
 
         }
 
-        private async Task<IEnumerable<string>> GetAssetsIdsAsync(IReadOnlyCollection<string> id)
+        private async Task<IEnumerable<string>> GetAssetsIdsAsync(IReadOnlyCollection<string> id, CancellationToken cancellationToken)
         {
             if (id == null || id.Count == 0)
             {
-                var allAssets = await _assetsService.AssetPairGetAllAsync();
+                var allAssets = await _assetsService.GetAllAssetPairsAsync(cancellationToken);
                 return allAssets.Select(a => a.Id).ToArray();
             }
             return id;

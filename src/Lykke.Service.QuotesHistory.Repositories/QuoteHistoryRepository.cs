@@ -22,11 +22,11 @@ namespace Lykke.Service.QuotesHistory.Repositories
             _tableStorage = tableStorage;
         }
 
-        public async Task<IEnumerable<IQuote>> GetQuotesAsync(string asset, bool isBuy, DateTime minute)
+        public async Task<IEnumerable<IQuote>> GetQuotesAsync(string assetPairs, bool isBuy, DateTime minute)
         {
-            if (string.IsNullOrEmpty(asset)) { throw new ArgumentNullException(nameof(asset)); }
+            if (string.IsNullOrEmpty(assetPairs)) { throw new ArgumentNullException(nameof(assetPairs)); }
 
-            var partitionKey = QuoteTableEntity.GeneratePartitionKey(asset, isBuy);
+            var partitionKey = QuoteTableEntity.GeneratePartitionKey(assetPairs, isBuy);
             var rowKey = QuoteTableEntity.GenerateRowKey(minute);
 
             var entity = await _tableStorage.GetDataAsync(partitionKey, rowKey);
@@ -38,13 +38,13 @@ namespace Lykke.Service.QuotesHistory.Repositories
             return new IQuote[0];
         }
 
-        public async Task<IReadOnlyCollection<IQuote>> GetQuotesAsync(DateTime from, DateTime to, IEnumerable<string> assets, CancellationToken cancellationToken)
+        public async Task<IReadOnlyCollection<IQuote>> GetQuotesAsync(DateTime from, DateTime to, IEnumerable<string> assetPairs, CancellationToken cancellationToken)
         {
 
             var fromKey = QuoteTableEntity.GenerateRowKey(from);
             var toKey = QuoteTableEntity.GenerateRowKey(to);
 
-            var queries = assets.Select(a => new[]
+            var queries = assetPairs.Select(a => new[]
             {
                 QuoteTableEntity.GeneratePartitionKey(a, false),
                 QuoteTableEntity.GeneratePartitionKey(a, true)
@@ -90,21 +90,21 @@ namespace Lykke.Service.QuotesHistory.Repositories
             await InsertOrMergeAsync(new[] { quote }, quote.AssetPair, quote.IsBuy);
         }
 
-        public async Task InsertOrMergeAsync(IReadOnlyCollection<IQuote> quotes, string asset, bool isBuy)
+        public async Task InsertOrMergeAsync(IReadOnlyCollection<IQuote> quotes, string assetPair, bool isBuy)
         {
             if (quotes == null) { throw new ArgumentNullException(nameof(quotes)); }
-            if (string.IsNullOrEmpty(asset)) { throw new ArgumentNullException(nameof(asset)); }
+            if (string.IsNullOrEmpty(assetPair)) { throw new ArgumentNullException(nameof(assetPair)); }
 
-            // Select only quotes with specified asset and buy sign
+            // Select only quotes with specified assetPair and buy sign
             quotes = quotes
-                .Where(q => q.AssetPair == asset && q.IsBuy == isBuy)
+                .Where(q => q.AssetPair == assetPair && q.IsBuy == isBuy)
                 .ToArray();
             if (!quotes.Any())
             {
                 return;
             }
 
-            var partitionKey = QuoteTableEntity.GeneratePartitionKey(asset, isBuy);
+            var partitionKey = QuoteTableEntity.GeneratePartitionKey(assetPair, isBuy);
 
             var newEntities = new List<QuoteTableEntity>();
 

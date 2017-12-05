@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Service.Assets.Client;
@@ -11,6 +12,8 @@ using Lykke.Service.QuotesHistory.Repositories;
 using Lykke.Service.QuotesHistory.Services;
 using Lykke.Service.QuotesHistory.Services.Quotes;
 using Lykke.SettingsReader;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Lykke.Service.QuotesHistory.Modules
 {
@@ -18,15 +21,26 @@ namespace Lykke.Service.QuotesHistory.Modules
     {
         private readonly IReloadingManager<AppSettings.QuotesHistorySettings> _settings;
         private readonly ILog _log;
+        private readonly ServiceCollection _services;
 
         public JobModule(IReloadingManager<AppSettings.QuotesHistorySettings> settings, ILog log)
         {
             _settings = settings;
             _log = log;
+            _services = new ServiceCollection();
+
+        }
+
+        private void RegisterAssetsServices()
+        {
+            var assets = _settings.CurrentValue.Assets;
+            _services.RegisterAssetsClient(AssetServiceSettings.Create(new Uri(assets.ServiceUrl), assets.CacheExpirationPeriod));
+
         }
 
         protected override void Load(ContainerBuilder builder)
         {
+            RegisterAssetsServices();
             builder.RegisterInstance(_log)
                 .As<ILog>()
                 .SingleInstance();
@@ -35,9 +49,6 @@ namespace Lykke.Service.QuotesHistory.Modules
                 .As<IHealthService>()
                 .SingleInstance();
 
-            builder.RegisterType<AssetsService>()
-                .WithParameter("baseUri", new Uri(_settings.CurrentValue.Services.AssetsServiceUrl))
-                .As<IAssetsService>();
 
             builder.Register(c => new QuoteHistoryRepository(
                 AzureTableStorage<QuoteTableEntity>.Create(
@@ -57,6 +68,8 @@ namespace Lykke.Service.QuotesHistory.Modules
                 .WithParameter(TypedParameter.From(_settings.CurrentValue.RabbitMq.ConnectionString))
                 .AutoActivate()
                 .SingleInstance();
+
+            builder.Populate(_services);
         }
     }
 }
