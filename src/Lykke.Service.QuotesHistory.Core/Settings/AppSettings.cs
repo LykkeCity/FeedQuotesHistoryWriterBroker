@@ -8,13 +8,14 @@ namespace Lykke.Service.QuotesHistory.Core.Settings
     {
         public SlackNotificationsSettings SlackNotifications { get; set; } = new SlackNotificationsSettings();
         public QuotesHistorySettings QuotesHistoryService { get; set; } = new QuotesHistorySettings();
+        public AssetsSettings Assets { get; set; }
 
         public class QuotesHistorySettings
         {
             public RabbitMqSettings RabbitMq { get; set; } = new RabbitMqSettings();
             public ConnectionStringsSettings ConnectionStrings { get; set; } = new ConnectionStringsSettings();
             public StorageRetrySettings StorageRetrySettings { get; set; } = new StorageRetrySettings();
-            public AssetsSettings Assets { get; set; }
+   
         }
 
         public class RabbitMqSettings

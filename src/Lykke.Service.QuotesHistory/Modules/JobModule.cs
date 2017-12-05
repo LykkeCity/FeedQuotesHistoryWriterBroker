@@ -19,13 +19,15 @@ namespace Lykke.Service.QuotesHistory.Modules
 {
     public class JobModule : Module
     {
-        private readonly IReloadingManager<AppSettings.QuotesHistorySettings> _settings;
+        private readonly IReloadingManager<AppSettings.QuotesHistorySettings> _serviceSettings;
+        private readonly IReloadingManager<AppSettings.AssetsSettings> _assetsSettings;
         private readonly ILog _log;
         private readonly ServiceCollection _services;
 
-        public JobModule(IReloadingManager<AppSettings.QuotesHistorySettings> settings, ILog log)
+        public JobModule(IReloadingManager<AppSettings.QuotesHistorySettings> serviceSettings, IReloadingManager<AppSettings.AssetsSettings> assetsSettings, ILog log)
         {
-            _settings = settings;
+            _serviceSettings = serviceSettings;
+            _assetsSettings = assetsSettings;
             _log = log;
             _services = new ServiceCollection();
 
@@ -33,7 +35,7 @@ namespace Lykke.Service.QuotesHistory.Modules
 
         private void RegisterAssetsServices()
         {
-            var assets = _settings.CurrentValue.Assets;
+            var assets = _assetsSettings.CurrentValue;
             _services.RegisterAssetsClient(AssetServiceSettings.Create(new Uri(assets.ServiceUrl), assets.CacheExpirationPeriod));
 
         }
@@ -52,11 +54,11 @@ namespace Lykke.Service.QuotesHistory.Modules
 
             builder.Register(c => new QuoteHistoryRepository(
                 AzureTableStorage<QuoteTableEntity>.Create(
-                    _settings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString), "QuotesHistory", _log,
-                    onModificationRetryCount: _settings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
-                    onGettingRetryCount: _settings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
-                    retryDelay: _settings.CurrentValue.StorageRetrySettings.RetryDelay,
-                    maxExecutionTimeout: _settings.CurrentValue.StorageRetrySettings.ExecutionTimeout)
+                    _serviceSettings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString), "QuotesHistory", _log,
+                    onModificationRetryCount: _serviceSettings.CurrentValue.StorageRetrySettings.OnModificationsRetryCount,
+                    onGettingRetryCount: _serviceSettings.CurrentValue.StorageRetrySettings.OnGettingRetryCount,
+                    retryDelay: _serviceSettings.CurrentValue.StorageRetrySettings.RetryDelay,
+                    maxExecutionTimeout: _serviceSettings.CurrentValue.StorageRetrySettings.ExecutionTimeout)
             )).As<IQuoteHistoryRepository>();
 
             builder.RegisterType<QuotesManager>()
@@ -65,7 +67,7 @@ namespace Lykke.Service.QuotesHistory.Modules
             builder.RegisterType<QuotesBroker>()
                 .As<IStartable>()
                 .As<IQuotesBroker>()
-                .WithParameter(TypedParameter.From(_settings.CurrentValue.RabbitMq.ConnectionString))
+                .WithParameter(TypedParameter.From(_serviceSettings.CurrentValue.RabbitMq.ConnectionString))
                 .AutoActivate()
                 .SingleInstance();
 

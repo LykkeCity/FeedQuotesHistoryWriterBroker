@@ -52,7 +52,7 @@ namespace Lykke.Service.QuotesHistory
                 var appSettings = Configuration.LoadSettings<AppSettings>();
                 Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService), Log));
+                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService), appSettings.Nested(x => x.Assets), Log));
 
                 builder.Populate(services);
 
