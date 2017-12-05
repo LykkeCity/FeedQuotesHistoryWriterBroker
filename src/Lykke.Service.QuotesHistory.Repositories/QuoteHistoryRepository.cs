@@ -43,6 +43,9 @@ namespace Lykke.Service.QuotesHistory.Repositories
 
             var fromKey = QuoteTableEntity.GenerateRowKey(from);
             var toKey = QuoteTableEntity.GenerateRowKey(to);
+            var dateFilter = TableQuery.CombineFilters(
+                TableQuery.GenerateFilterCondition(nameof(QuoteTableEntity.RowKey), QueryComparisons.GreaterThanOrEqual, fromKey),
+                TableOperators.And, TableQuery.GenerateFilterCondition(nameof(QuoteTableEntity.RowKey), QueryComparisons.LessThan, toKey));
 
             var queries = assetPairs.Select(a => new[]
             {
@@ -53,10 +56,7 @@ namespace Lykke.Service.QuotesHistory.Repositories
                 {
                     return partKeys.Select(pk =>
                      {
-                         var assetFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, pk);
-                         var dateFilter = TableQuery.CombineFilters(
-                             TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, fromKey),
-                             TableOperators.And, TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThan, toKey));
+                         var assetFilter = TableQuery.GenerateFilterCondition(nameof(QuoteTableEntity.PartitionKey), QueryComparisons.Equal, pk);
                          return new TableQuery<QuoteTableEntity>().Where(TableQuery.CombineFilters(assetFilter, TableOperators.And, dateFilter));
                      });
                 });
