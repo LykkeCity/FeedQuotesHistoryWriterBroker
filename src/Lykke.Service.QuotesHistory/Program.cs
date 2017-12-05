@@ -5,8 +5,11 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace Lykke.Service.QuotesHistory
 {
-    public class Program
+    internal class Program
     {
+
+        public static string EnvInfo => Environment.GetEnvironmentVariable("ENV_INFO");
+
         public static async Task Main(string[] args)
         {
             Console.WriteLine($"QuotesHistory version {Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion}");
@@ -15,7 +18,7 @@ namespace Lykke.Service.QuotesHistory
 #else
             Console.WriteLine("Is RELEASE");
 #endif           
-            Console.WriteLine($"ENV_INFO: {Environment.GetEnvironmentVariable("ENV_INFO")}");
+            Console.WriteLine($"ENV_INFO: {EnvInfo}");
 
             try
             {
@@ -40,13 +43,12 @@ namespace Lykke.Service.QuotesHistory
                 Console.WriteLine();
                 Console.WriteLine($"Process will be terminated in {delay}. Press any key to terminate immediately.");
 
-                Task.WhenAny(
-                        Task.Delay(delay),
-                        Task.Run(() =>
-                        {
-                            Console.ReadKey(true);
-                        }))
-                    .Wait();
+                await Task.WhenAny(
+                    Task.Delay(delay),
+                    Task.Run(() =>
+                    {
+                        Console.ReadKey(true);
+                    }));
             }
 
             Console.WriteLine("Terminated");
