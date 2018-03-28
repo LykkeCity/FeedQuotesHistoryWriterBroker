@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Lykke.Service.QuotesHistory
 {
     internal sealed class Startup
@@ -41,7 +40,12 @@ namespace Lykke.Service.QuotesHistory
         {
             try
             {
-                services.AddMvc();
+                services.AddMvc()
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.ContractResolver =
+                            new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    });
 
                 services.AddSwaggerGen(options =>
                 {
@@ -52,7 +56,7 @@ namespace Lykke.Service.QuotesHistory
                 var appSettings = Configuration.LoadSettings<AppSettings>();
                 Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService), appSettings.Nested(x => x.Assets), Log));
+                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService), Log));
 
                 builder.Populate(services);
 
@@ -77,10 +81,7 @@ namespace Lykke.Service.QuotesHistory
             app.UseLykkeMiddleware("FeedQuotesHistoryWriterBroker", ex => new ErrorResponse { ErrorMessage = "Technical problem" });
 
             app.UseMvc();
-            app.UseSwagger(c =>
-            {
-                c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
-            });
+            app.UseSwagger();
             app.UseSwaggerUI(x =>
             {
                 x.RoutePrefix = "swagger/ui";
@@ -97,7 +98,7 @@ namespace Lykke.Service.QuotesHistory
         {
             try
             {
-                await Log.WriteMonitorAsync("", Program.EnvInfo, "Started");
+                await Log.WriteMonitorAsync("", "", "Started");
             }
             catch (Exception ex)
             {
@@ -128,7 +129,7 @@ namespace Lykke.Service.QuotesHistory
             {
                 if (Log != null)
                 {
-                    await Log.WriteMonitorAsync("", Program.EnvInfo, "Terminating");
+                    await Log.WriteMonitorAsync("", "", "Terminating");
                 }
 
                 ApplicationContainer.Dispose();
