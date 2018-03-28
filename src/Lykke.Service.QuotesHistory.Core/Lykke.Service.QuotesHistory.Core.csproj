@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.Domain.Prices" Version="0.9.11" />
-    <PackageReference Include="Lykke.Common" Version="3.0.2" />
+    <PackageReference Include="Lykke.Common" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>
