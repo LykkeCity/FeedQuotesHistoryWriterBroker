@@ -50,7 +50,15 @@ namespace QuotesHistoryCorrectionTool.DataProcessor
                             continue;
                         }
 
-                        var newEntity = entity.SwitchRowKeyType();
+                        QuotesHistoryEntity newEntity;
+                        try
+                        {
+                            newEntity = entity.SwitchRowKeyType();
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new AggregateException($"Couldn't convert the row key for entity with PK = {entity.PartitionKey} and RK = {entity.RowKey}, please, see inner exception for details.", ex);
+                        }
 
                         if (!_repo.InsertEntity(newEntity))
                             throw new InvalidOperationException(
