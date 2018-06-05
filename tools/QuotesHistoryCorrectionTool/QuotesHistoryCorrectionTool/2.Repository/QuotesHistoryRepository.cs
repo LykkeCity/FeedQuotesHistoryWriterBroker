@@ -22,6 +22,8 @@ namespace QuotesHistoryCorrectionTool.Repository
         private readonly int _removalQueueMaxSize;
 
         private readonly DateTime _startTime;
+        private int _totalInsertedCount;
+        private int _totalDeletedCount;
 
         public bool SingleTableMode { get; }
         public bool IoStateFailed { get; private set; }
@@ -113,7 +115,7 @@ namespace QuotesHistoryCorrectionTool.Repository
             catch (Exception ex)
             {
                 IoStateFailed = true;
-                _log.WriteErrorAsync(nameof(DeleteEntity), null, ex).Wait();
+                _log.WriteErrorAsync(nameof(InsertEntity), null, ex).Wait();
                 return false;
             }
         }
@@ -132,11 +134,14 @@ namespace QuotesHistoryCorrectionTool.Repository
                     {
                         _destStorage.InsertAsync(chunk).Wait();
 
+                        var chunkSize = chunk.Count();
+                        _totalInsertedCount += chunkSize;
+
                         _log.WriteInfoAsync(nameof(Flush),
                             string.Empty,
-                            $"\nBatch of {chunk.Count()} records stored. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
+                            $"\nBatch of {chunkSize} records stored. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
                             $"the last record was PK = {chunk.Last().PartitionKey} & RK = {chunk.Last().RowKey}." +
-                            $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}.",
+                            $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}. Totally inserted {_totalInsertedCount} items.",
                             useThrottling: true).Wait();
                     }
 
@@ -148,13 +153,16 @@ namespace QuotesHistoryCorrectionTool.Repository
                 {
                     foreach (var chunk in _queueToDelete.GroupBy(item => item.PartitionKey))
                     {
-                        _destStorage.InsertAsync(chunk).Wait();
+                        _destStorage.DeleteAsync(chunk).Wait();
+
+                        var chunkSize = chunk.Count();
+                        _totalDeletedCount += chunkSize;
 
                         _log.WriteInfoAsync(nameof(Flush),
                             string.Empty,
-                            $"\nBatch of {chunk.Count()} records stored. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
+                            $"\nBatch of {chunkSize} records deleted. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
                             $"the last record was PK = {chunk.Last().PartitionKey} & RK = {chunk.Last().RowKey}" +
-                            $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}.",
+                            $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}. Totally deleted {_totalDeletedCount} items.",
                             useThrottling: true).Wait();
                     }
 
