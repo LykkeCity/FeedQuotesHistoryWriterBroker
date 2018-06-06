@@ -20,7 +20,7 @@ namespace QuotesHistoryCorrectionTool.Repository
         public DateTimeOffset Timestamp { get; set; }
 
         public string Part000 { get; set; }
-        public RowKeyType RkType => DetectRkType(RowKey).type;
+        public RowKeyType RkType => DetectRkType().type;
 
         // For using with AzureTableStorage
         public QuotesHistoryEntity()
@@ -52,7 +52,8 @@ namespace QuotesHistoryCorrectionTool.Repository
 
         public QuotesHistoryEntity SwitchRowKeyType()
         {
-            (var rkType, var date) = DetectRkType(RowKey);
+            (var rkType, var date) = DetectRkType();
+            
 
             switch (rkType)
             {
@@ -64,35 +65,35 @@ namespace QuotesHistoryCorrectionTool.Repository
 
                 // Neverhood
                 default:
-                    throw new InvalidOperationException("Something wrong: the entity has unrecognized row key type.");
+                    throw new InvalidOperationException($"Something wrong: the entity with PK = {PartitionKey} RK = {RowKey} has unrecognized row key type.");
             }
         }
         
         #region Private
 
-        private static (RowKeyType type, DateTime value) DetectRkType(string value)
+        private (RowKeyType type, DateTime value) DetectRkType()
         {
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentNullException(nameof(value));
+            if (string.IsNullOrEmpty(RowKey))
+                throw new ArgumentNullException(nameof(RowKey));
             
             // Ticks is like 0636274006200000000
             // Literals is like 2017-03-13T09:27:00
 
             // Just a primitive check for we actually do have only 2 possible RK types in the table.
 
-            switch (value.Length)
+            switch (RowKey.Length)
             {
-                case 19 when value.Contains("-") && value.Contains("T") && value.Contains(":"):
-                    if (!DateTime.TryParse(value, out var date))
-                        throw new ArgumentException($"The input string '{value}' can not be converted to DateTime object.");
+                case 19 when RowKey.Contains("-") && RowKey.Contains("T") && RowKey.Contains(":"):
+                    if (!DateTime.TryParse(RowKey, out var date))
+                        throw new ArgumentException($"Couldn't detect the entity type with PK = {PartitionKey} and RK = {RowKey}: The input string '{RowKey}' can not be converted to DateTime object.");
                     return (type: RowKeyType.Literals, value: date);
 
                 case 19:
-                    date = new DateTime(long.Parse(value), DateTimeKind.Utc);
+                    date = new DateTime(long.Parse(RowKey), DateTimeKind.Utc);
                     return (type: RowKeyType.Ticks, value: date);
 
                 default:
-                    throw new ArgumentException($"The input string '{value}' is not recognized as a proper date-time string of the format Ticks or Literals.");
+                    throw new ArgumentException($"Couldn't detect the entity type with PK = {PartitionKey} and RK = {RowKey}: The input string '{RowKey}' is not recognized as a proper date-time string of the format Ticks or Literals.");
             }
         }
 

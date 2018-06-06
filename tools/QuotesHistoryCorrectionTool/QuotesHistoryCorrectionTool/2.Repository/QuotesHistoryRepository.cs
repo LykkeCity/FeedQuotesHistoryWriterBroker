@@ -142,6 +142,7 @@ namespace QuotesHistoryCorrectionTool.Repository
                             $"\nBatch of {chunkSize} records stored. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
                             $"the last record was PK = {chunk.Last().PartitionKey} & RK = {chunk.Last().RowKey}." +
                             $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}. Totally inserted {_totalInsertedCount} items.",
+                            operation: LogExtension.LoggingOperation.Insert,
                             useThrottling: true).Wait();
                     }
 
@@ -163,6 +164,7 @@ namespace QuotesHistoryCorrectionTool.Repository
                             $"\nBatch of {chunkSize} records deleted. The first record was PK = {chunk.First().PartitionKey} & RK = {chunk.First().RowKey}, " +
                             $"the last record was PK = {chunk.Last().PartitionKey} & RK = {chunk.Last().RowKey}" +
                             $"\nThe whole process was started at {_startTime:G}, time elapsed is {DateTime.UtcNow - _startTime}. Totally deleted {_totalDeletedCount} items.",
+                            operation: LogExtension.LoggingOperation.Delete,
                             useThrottling: true).Wait();
                     }
 

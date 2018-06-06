@@ -50,15 +50,7 @@ namespace QuotesHistoryCorrectionTool.DataProcessor
                             continue;
                         }
 
-                        QuotesHistoryEntity newEntity;
-                        try
-                        {
-                            newEntity = entity.SwitchRowKeyType();
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new AggregateException($"Couldn't convert the row key for entity with PK = {entity.PartitionKey} and RK = {entity.RowKey}, please, see inner exception for details.", ex);
-                        }
+                        var newEntity = entity.SwitchRowKeyType();
 
                         if (!_repo.InsertEntity(newEntity))
                             throw new InvalidOperationException(
@@ -80,6 +72,13 @@ namespace QuotesHistoryCorrectionTool.DataProcessor
             catch (Exception ex)
             {
                 _log.WriteFatalErrorAsync(nameof(Execute), string.Empty, ex).Wait();
+                // ReSharper disable once InvertIf
+                if (!_repo.IoStateFailed)
+                {
+                    Console.WriteLine("\n\nTerminating on error, see logs. Trying to flush the queues...\n");
+                    _repo.Flush();
+                }
+
                 return false;
             }
         }
