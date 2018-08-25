@@ -48,7 +48,8 @@ namespace QuotesHistoryCorrectionTool
                 };
 
                 var repo = new QuotesHistoryRepository(log,
-                    settings.ConnectionString(x => x.ConnectionStrings.HistoryConnectionString),
+                    settings.ConnectionString(x => x.ConnectionStrings.SourceHistoryConnectionString),
+                    settings.ConnectionString(x => x.ConnectionStrings.DestinationHistoryConnectionString),
                     settings.CurrentValue.DataCorrection);
 
                 // ---

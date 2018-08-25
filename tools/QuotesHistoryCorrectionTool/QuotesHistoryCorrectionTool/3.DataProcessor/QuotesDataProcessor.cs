@@ -40,9 +40,6 @@ namespace QuotesHistoryCorrectionTool.DataProcessor
                     {
                         if (entity.RkType == QuotesHistoryEntity.RowKeyType.Literals)
                         {
-                            if (_repo.SingleTableMode)
-                                continue;
-                            
                             if (!_repo.InsertEntity(entity))
                                 throw new InvalidOperationException(
                                     $"Couldn't insert the entity with PK = {entity.PartitionKey} and RK = {entity.RowKey}, please, see logs for more details. Can't proceed.");
@@ -55,13 +52,6 @@ namespace QuotesHistoryCorrectionTool.DataProcessor
                         if (!_repo.InsertEntity(newEntity))
                             throw new InvalidOperationException(
                                 $"Couldn't insert the entity with PK = {newEntity.PartitionKey} and RK = {newEntity.RowKey}, please, see logs for more details. Can't proceed.");
-
-                        if (!_repo.SingleTableMode)
-                            continue;
-
-                        if (!_repo.DeleteEntity(entity))
-                            throw new InvalidOperationException(
-                                $"Couldn't delete the entity with PK = {entity.PartitionKey} and RK = {entity.RowKey}, please, see logs for more details. Can't proceed.");
                     }
                 } while (!string.IsNullOrWhiteSpace(_continuationToken));
 
