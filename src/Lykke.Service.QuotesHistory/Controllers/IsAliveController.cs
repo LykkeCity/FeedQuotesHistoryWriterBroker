@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.QuotesHistory.Core.Services;
-using Lykke.Service.QuotesHistory.Models;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -10,11 +10,15 @@ namespace Lykke.Service.QuotesHistory.Controllers
 {
     // NOTE: See https://lykkex.atlassian.net/wiki/spaces/LKEWALLET/pages/35755585/Add+your+app+to+Monitoring
     [Route("api/[controller]")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class IsAliveController : Controller
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         private readonly IHealthService _healthService;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public IsAliveController(IHealthService healthService)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
             _healthService = healthService;
         }

@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
-using Lykke.AzureQueueIntegration;
+using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Common.Log;
 using Lykke.Logs;
 using Lykke.Service.QuotesHistory.Core.Services.Quotes;
 using Lykke.Service.QuotesHistory.Core.Settings;
-using Lykke.Service.QuotesHistory.Models;
 using Lykke.Service.QuotesHistory.Modules;
 using Lykke.SettingsReader;
-using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.PlatformAbstractions;
+using Newtonsoft.Json.Converters;
 
 namespace Lykke.Service.QuotesHistory
 {
@@ -26,6 +26,7 @@ namespace Lykke.Service.QuotesHistory
         private IContainer ApplicationContainer { get; set; }
         private IConfigurationRoot Configuration { get; }
         private ILog Log { get; set; }
+        private IHealthNotifier HealthNotifier { get; set; }
 
         public Startup(IHostingEnvironment env)
         {
@@ -43,6 +44,7 @@ namespace Lykke.Service.QuotesHistory
                 services.AddMvc()
                     .AddJsonOptions(options =>
                     {
+                        options.SerializerSettings.Converters.Add(new StringEnumConverter());
                         options.SerializerSettings.ContractResolver =
                             new Newtonsoft.Json.Serialization.DefaultContractResolver();
                     });
@@ -50,23 +52,45 @@ namespace Lykke.Service.QuotesHistory
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", "Lykke.Service.QuotesHistory API");
+
+                    //Determine base path for the application.
+                    var basePath = PlatformServices.Default.Application.ApplicationBasePath;
+
+                    //Set the comments path for the swagger json and ui.
+                    var xmlPath = Path.Combine(basePath, "Lykke.Service.QuotesHistory.xml");
+                    options.IncludeXmlComments(xmlPath);
                 });
 
                 var builder = new ContainerBuilder();
-                var appSettings = Configuration.LoadSettings<AppSettings>();
-                Log = CreateLogWithSlack(services, appSettings);
+                var appSettings = Configuration.LoadSettings<AppSettings>(options =>
+                {
+                    options.SetConnString(x => x.SlackNotifications.AzureQueue.ConnectionString);
+                    options.SetQueueName(x => x.SlackNotifications.AzureQueue.QueueName);
+                    options.SenderName = "Lykke.Service.QuotesHistory";
+                });
 
-                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService), Log));
+                services.AddLykkeLogging(
+                    appSettings.ConnectionString(x => x.QuotesHistoryService.ConnectionStrings.LogsConnectionString),
+                    "FeedQuotesHistoryWriterBrokerLogs",
+                    appSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                    appSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+                    );
 
                 builder.Populate(services);
 
+                builder.RegisterModule(new JobModule(appSettings.Nested(x => x.QuotesHistoryService)));
+                
                 ApplicationContainer = builder.Build();
+
+                Log = ApplicationContainer.Resolve<ILogFactory>().CreateLog(this);
+
+                HealthNotifier = ApplicationContainer.Resolve<IHealthNotifier>();
 
                 return new AutofacServiceProvider(ApplicationContainer);
             }
             catch (Exception ex)
             {
-                Log?.WriteErrorAsync(nameof(Startup), nameof(StopApplication), "", ex).Wait();
+                Log?.Critical(ex);
                 throw;
             }
         }
@@ -78,7 +102,7 @@ namespace Lykke.Service.QuotesHistory
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseLykkeMiddleware("FeedQuotesHistoryWriterBroker", ex => new ErrorResponse { ErrorMessage = "Technical problem" });
+            app.UseLykkeMiddleware(ex => new ErrorResponse { ErrorMessage = "Technical problem" });
 
             app.UseMvc();
             app.UseSwagger();
@@ -89,24 +113,25 @@ namespace Lykke.Service.QuotesHistory
             });
             app.UseStaticFiles();
 
-            appLifetime.ApplicationStarted.Register(() => StartApplication().GetAwaiter().GetResult());
-            appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
-            appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
+            appLifetime.ApplicationStarted.Register(StartApplication);
+            appLifetime.ApplicationStopping.Register(StopApplication);
+            appLifetime.ApplicationStopped.Register(CleanUp);
         }
 
-        private async Task StartApplication()
+        private void StartApplication()
         {
             try
             {
-                await Log.WriteMonitorAsync("", "", "Started");
+                HealthNotifier?.Notify("Started");
             }
             catch (Exception ex)
             {
-                await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
+                Log?.Critical(ex);
+                throw;
             }
         }
 
-        private async Task StopApplication()
+        private void StopApplication()
         {
             try
             {
@@ -116,21 +141,15 @@ namespace Lykke.Service.QuotesHistory
             }
             catch (Exception ex)
             {
-                if (Log != null)
-                {
-                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StopApplication), "", ex);
-                }
+                Log?.Critical(ex);
             }
         }
 
-        private async Task CleanUp()
+        private void CleanUp()
         {
             try
             {
-                if (Log != null)
-                {
-                    await Log.WriteMonitorAsync("", "", "Terminating");
-                }
+                HealthNotifier?.Notify("Terminating");
 
                 ApplicationContainer.Dispose();
             }
@@ -138,49 +157,10 @@ namespace Lykke.Service.QuotesHistory
             {
                 if (Log != null)
                 {
-                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
+                    Log.Critical(ex);
                     (Log as IDisposable)?.Dispose();
                 }
             }
-        }
-
-        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
-        {
-            var consoleLogger = new LogToConsole();
-            var aggregateLogger = new AggregateLogger();
-
-            aggregateLogger.AddLog(consoleLogger);
-
-            // Creating slack notification service, which logs own azure queue processing messages to aggregate log
-            var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
-            {
-                ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-            }, aggregateLogger);
-
-            var dbLogConnectionStringManager = settings.Nested(x => x.QuotesHistoryService.ConnectionStrings.LogsConnectionString);
-            var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
-
-            // Creating azure storage logger, which logs own messages to console log
-            if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
-            {
-                var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
-                    AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "FeedQuotesHistoryWriterBrokerLogs", consoleLogger),
-                    consoleLogger);
-
-                var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(slackService, consoleLogger);
-
-                var azureStorageLogger = new LykkeLogToAzureStorage(
-                    persistenceManager,
-                    slackNotificationsManager,
-                    consoleLogger);
-
-                azureStorageLogger.Start();
-
-                aggregateLogger.AddLog(azureStorageLogger);
-            }
-
-            return aggregateLogger;
         }
     }
 }
