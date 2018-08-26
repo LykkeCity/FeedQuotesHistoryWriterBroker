@@ -6,9 +6,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.Domain.Prices.Model;
 using Lykke.Service.QuotesHistory.Core.Domain.Quotes;
 using Lykke.Service.QuotesHistory.Core.Services.Quotes;
+using MoreLinq;
 
 namespace Lykke.Service.QuotesHistory.Services.Quotes
 {
@@ -25,13 +27,13 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
         /// <summary>Average write duration</summary>
         private TimeSpan _avgWriteSpan = TimeSpan.Zero;
 
-        public QuotesManager(IQuoteHistoryRepository repo, ILog log)
+        public QuotesManager(IQuoteHistoryRepository repo, ILogFactory logFactory)
         {
             _repo = repo;
-            _log = log;
+            _log = logFactory.CreateLog(this);
         }
 
-        public async Task ConsumeQuote(Quote quote)
+        public void ConsumeQuote(Quote quote)
         {
             // Validate
             // 
@@ -40,7 +42,7 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
             {
                 foreach (var error in validationErrors)
                 {
-                    await _log.WriteErrorAsync(nameof(QuotesManager), nameof(ConsumeQuote), string.Empty, new ArgumentException("Received invalid quote. " + error));
+                    _log.Error(new ArgumentException("Received invalid quote. " + error));
                 }
                 return; // Skipping invalid quotes
             }
@@ -87,7 +89,7 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
                 .Select(assetGroup => assetGroup);
 
             // Write to storage simultaneously with maximum tasks number
-            foreach (var collection in assetGroups.ToPieces(ChunkSize))
+            foreach (var collection in assetGroups.Batch(ChunkSize))
             {
                 var tasks = collection
                     .Select(group => ProcessQuotesForAsset(group.ToArray(), group.Key))
@@ -102,7 +104,7 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
             _avgWriteSpan = new TimeSpan((_avgWriteSpan.Ticks + watch.Elapsed.Ticks) / 2);
             if (DateTime.UtcNow - _lastServiceLogTime > TimeSpan.FromHours(1))
             {
-                await _log.WriteInfoAsync(nameof(QuotesManager), nameof(ProcessQuotes), string.Empty, $"Average write time: {_avgWriteSpan}");
+                _log.Info($"Average write time: {_avgWriteSpan}");
                 _lastServiceLogTime = DateTime.UtcNow;
             }
         }

@@ -19,7 +19,9 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanStoreQuotesWithSameTimestamp()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var log = new LogToMemory();
+#pragma warning restore CS0618 // Type or member is obsolete
             var storage = CreateStorage<QuoteTableEntity>(log);
             var repo = new QuoteHistoryRepository(storage);
 
@@ -48,7 +50,9 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanStoreMultipleRows()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var log = new LogToMemory();
+#pragma warning restore CS0618 // Type or member is obsolete
             var storage = CreateStorage<QuoteTableEntity>(log);
             var repo = new QuoteHistoryRepository(storage);
 
@@ -69,14 +73,14 @@ namespace Lykke.Service.QuotesHistory.Tests
 
             // Storage contains 4 rows
             var storedQuotes = repo.GetQuotesAsync(asset, true, baseTime).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
             storedQuotes = repo.GetQuotesAsync(asset, true, baseTime.AddMinutes(1)).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
 
             storedQuotes = repo.GetQuotesAsync(asset, false, baseTime).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
             storedQuotes = repo.GetQuotesAsync(asset, false, baseTime.AddMinutes(1)).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
 
             Assert.Equal(0, log.Count);
         }
@@ -87,7 +91,9 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanUtilizeMultipleProperties()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var log = new LogToMemory();
+#pragma warning restore CS0618 // Type or member is obsolete
             var storage = CreateStorage<QuoteTableEntity>(log);
             var repo = new QuoteHistoryRepository(storage);
 
@@ -95,7 +101,7 @@ namespace Lykke.Service.QuotesHistory.Tests
             var baseTime = new DateTime(2017, 03, 12, 13, 14, 05, DateTimeKind.Utc);
             var quotes = new List<Quote>();
             // Create a lot of quotes in one second (will be placed in one row)
-            for (int i = 0; i < 2000; i++)
+            for (var i = 0; i < 2000; i++)
             {
                 quotes.Add(new Quote() { AssetPair = asset, IsBuy = true, Price = i / 10, Timestamp = baseTime.AddMilliseconds(i / 2) });
             }
