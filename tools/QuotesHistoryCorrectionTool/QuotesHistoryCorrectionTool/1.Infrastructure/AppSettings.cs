@@ -14,7 +14,9 @@ namespace QuotesHistoryCorrectionTool.Infrastructure
     public class ConnectionStringsSettings
     {
         [AzureTableCheck]
-        public string HistoryConnectionString { get; set; }
+        public string SourceHistoryConnectionString { get; set; }
+        [AzureTableCheck]
+        public string DestinationHistoryConnectionString { get; set; }
         [AzureTableCheck]
         public string LogsConnectionString { get; set; }
     }
@@ -38,7 +40,6 @@ namespace QuotesHistoryCorrectionTool.Infrastructure
         public string DestinationTableName { get; set; }
         public int QueryBatchSize { get; set; }
         public int PersistenceQueueMaxSize { get; set; }
-        public int RemovalQueueMaxSize { get; set; }
         public TimeSpan InfoMessagesTimeout { get; set; }
     }
 }
