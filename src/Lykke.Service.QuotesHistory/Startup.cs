@@ -3,6 +3,7 @@ using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
+using Lykke.Common;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
@@ -52,13 +53,7 @@ namespace Lykke.Service.QuotesHistory
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", "Lykke.Service.QuotesHistory API");
-
-                    //Determine base path for the application.
-                    var basePath = PlatformServices.Default.Application.ApplicationBasePath;
-
-                    //Set the comments path for the swagger json and ui.
-                    var xmlPath = Path.Combine(basePath, "Lykke.Service.QuotesHistory.xml");
-                    options.IncludeXmlComments(xmlPath);
+                    options.EnableXmlDocumentation();
                 });
 
                 var builder = new ContainerBuilder();
@@ -66,7 +61,7 @@ namespace Lykke.Service.QuotesHistory
                 {
                     options.SetConnString(x => x.SlackNotifications.AzureQueue.ConnectionString);
                     options.SetQueueName(x => x.SlackNotifications.AzureQueue.QueueName);
-                    options.SenderName = "Lykke.Service.QuotesHistory";
+                    options.SenderName = AppEnvironment.Name;
                 });
 
                 services.AddLykkeLogging(

@@ -5,13 +5,9 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace Lykke.Service.QuotesHistory
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public class Program
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+    class Program
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public static async Task Main(string[] args)
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
             Console.WriteLine($"QuotesHistory version {Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion}");
 #if DEBUG

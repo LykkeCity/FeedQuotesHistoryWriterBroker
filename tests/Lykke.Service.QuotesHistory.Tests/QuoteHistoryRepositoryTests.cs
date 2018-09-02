@@ -5,6 +5,7 @@ using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Domain.Prices.Model;
+using Lykke.Logs;
 using Lykke.Service.QuotesHistory.Repositories;
 using Microsoft.WindowsAzure.Storage.Table;
 using Xunit;
@@ -19,10 +20,7 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanStoreQuotesWithSameTimestamp()
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            var log = new LogToMemory();
-#pragma warning restore CS0618 // Type or member is obsolete
-            var storage = CreateStorage<QuoteTableEntity>(log);
+            var storage = CreateStorage<QuoteTableEntity>(EmptyLogFactory.Instance.CreateLog(this));
             var repo = new QuoteHistoryRepository(storage);
 
             var asset = "EURUSD";
@@ -41,7 +39,6 @@ namespace Lykke.Service.QuotesHistory.Tests
 
             Assert.NotNull(storedQuotes);
             Assert.Equal(2, storedQuotes.Count());
-            Assert.Equal(0, log.Count);
         }
 
         /// <summary>

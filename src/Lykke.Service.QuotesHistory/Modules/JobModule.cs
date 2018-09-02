@@ -12,22 +12,16 @@ using Lykke.SettingsReader;
 
 namespace Lykke.Service.QuotesHistory.Modules
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public class JobModule : Module
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+    class JobModule : Module
     {
         private readonly IReloadingManager<AppSettings.QuotesHistorySettings> _settings;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public JobModule(IReloadingManager<AppSettings.QuotesHistorySettings> settings)
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
             _settings = settings;
         }
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         protected override void Load(ContainerBuilder builder)
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
             builder.RegisterType<HealthService>()
                 .As<IHealthService>()
