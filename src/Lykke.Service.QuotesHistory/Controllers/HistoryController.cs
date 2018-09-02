@@ -41,6 +41,11 @@ namespace Lykke.Service.QuotesHistory.Controllers
         {
             if (string.IsNullOrEmpty(assetPair))
                 return BadRequest("Asset pair should not have empty value.");
+            // If we've got some incorrect date-time value, the corresponding param will be assigned with the default value (actually,  DatTime.MinValue).
+            if (fromMoment == default)
+                return BadRequest("Starting time stamp is malformed.");
+            if (toMoment == default)
+                return BadRequest("Ending time stamp is malformed.");
             if (fromMoment > toMoment)
                 return BadRequest("Starting time stamp for the query should not be later than the ending time stamp.");
 
