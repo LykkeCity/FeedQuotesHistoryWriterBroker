@@ -46,8 +46,8 @@ namespace Lykke.Service.QuotesHistory.Controllers
                 return BadRequest("Starting time stamp is malformed.");
             if (toMoment == default)
                 return BadRequest("Ending time stamp is malformed.");
-            if (fromMoment > toMoment)
-                return BadRequest("Starting time stamp for the query should not be later than the ending time stamp.");
+            if (fromMoment >= toMoment)
+                return BadRequest("Starting time stamp for the query should be earlier than the ending time stamp.");
 
             // ---
 
@@ -59,7 +59,7 @@ namespace Lykke.Service.QuotesHistory.Controllers
 
                 return Ok(new QuotesHistoryResponseModel
                 {
-                    Quotes = quotes.Quotes.Select(q => HumanReadableQuote.FromIQuote(q)),
+                    Quotes = quotes.Quotes.Select(q => QuotesHistoryResponseItem.FromIQuote(q)),
                     ContinuationToken = quotes.ContinuationToken
                 });
             }
