@@ -5,6 +5,7 @@ using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Domain.Prices.Model;
+using Lykke.Logs;
 using Lykke.Service.QuotesHistory.Repositories;
 using Microsoft.WindowsAzure.Storage.Table;
 using Xunit;
@@ -19,8 +20,7 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanStoreQuotesWithSameTimestamp()
         {
-            var log = new LogToMemory();
-            var storage = CreateStorage<QuoteTableEntity>(log);
+            var storage = CreateStorage<QuoteTableEntity>(EmptyLogFactory.Instance.CreateLog(this));
             var repo = new QuoteHistoryRepository(storage);
 
             var asset = "EURUSD";
@@ -39,7 +39,6 @@ namespace Lykke.Service.QuotesHistory.Tests
 
             Assert.NotNull(storedQuotes);
             Assert.Equal(2, storedQuotes.Count());
-            Assert.Equal(0, log.Count);
         }
 
         /// <summary>
@@ -48,8 +47,7 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanStoreMultipleRows()
         {
-            var log = new LogToMemory();
-            var storage = CreateStorage<QuoteTableEntity>(log);
+            var storage = CreateStorage<QuoteTableEntity>(EmptyLogFactory.Instance.CreateLog(this));
             var repo = new QuoteHistoryRepository(storage);
 
             var asset = "EURUSD";
@@ -69,16 +67,14 @@ namespace Lykke.Service.QuotesHistory.Tests
 
             // Storage contains 4 rows
             var storedQuotes = repo.GetQuotesAsync(asset, true, baseTime).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
             storedQuotes = repo.GetQuotesAsync(asset, true, baseTime.AddMinutes(1)).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
 
             storedQuotes = repo.GetQuotesAsync(asset, false, baseTime).Result;
-            Assert.Equal(1, storedQuotes.Count());
+            Assert.Single(storedQuotes);
             storedQuotes = repo.GetQuotesAsync(asset, false, baseTime.AddMinutes(1)).Result;
-            Assert.Equal(1, storedQuotes.Count());
-
-            Assert.Equal(0, log.Count);
+            Assert.Single(storedQuotes);
         }
 
         /// <summary>
@@ -87,15 +83,14 @@ namespace Lykke.Service.QuotesHistory.Tests
         [Fact(Skip = "Hangs in TC")]
         public void RepositoryCanUtilizeMultipleProperties()
         {
-            var log = new LogToMemory();
-            var storage = CreateStorage<QuoteTableEntity>(log);
+            var storage = CreateStorage<QuoteTableEntity>(EmptyLogFactory.Instance.CreateLog(this));
             var repo = new QuoteHistoryRepository(storage);
 
             var asset = "EURUSD";
             var baseTime = new DateTime(2017, 03, 12, 13, 14, 05, DateTimeKind.Utc);
             var quotes = new List<Quote>();
             // Create a lot of quotes in one second (will be placed in one row)
-            for (int i = 0; i < 2000; i++)
+            for (var i = 0; i < 2000; i++)
             {
                 quotes.Add(new Quote() { AssetPair = asset, IsBuy = true, Price = i / 10, Timestamp = baseTime.AddMilliseconds(i / 2) });
             }
@@ -108,7 +103,6 @@ namespace Lykke.Service.QuotesHistory.Tests
 
             Assert.NotNull(storedQuotes);
             Assert.Equal(2000, storedQuotes.Count());
-            Assert.Equal(0, log.Count);
         }
         
         private INoSQLTableStorage<T> CreateStorage<T>(ILog logger, bool clear = true) where T : class, ITableEntity, new()

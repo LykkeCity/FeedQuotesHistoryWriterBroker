@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Common;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using MoreLinq;
 using Newtonsoft.Json;
 
 namespace Lykke.Service.QuotesHistory.Repositories
@@ -40,13 +40,11 @@ namespace Lykke.Service.QuotesHistory.Repositories
             var dataFields = properties.Keys.Where(key => key.StartsWith("Part")).ToList();
             dataFields.Sort();
 
-            StringBuilder content = new StringBuilder();
-            foreach (string dataField in dataFields)
+            var content = new StringBuilder();
+            foreach (var dataField in dataFields)
             {
-                EntityProperty property;
-                int cell;
                 // Check that field's name is "Part<number>"
-                if (properties.TryGetValue(dataField, out property) && Int32.TryParse(dataField.Substring(4), out cell))
+                if (properties.TryGetValue(dataField, out var property) && Int32.TryParse(dataField.Substring(4), out var cell))
                 {
                     content.Append(property.StringValue);
                 }
@@ -61,11 +59,11 @@ namespace Lykke.Service.QuotesHistory.Repositories
             // Split to 64Kb parts
             // Write each part to separate field
 
-            string content = JsonConvert.SerializeObject(this.Quotes);
-            string[] parts = content.ToPieces(32000).Select(collection => new string(collection.ToArray())).ToArray();
+            var content = JsonConvert.SerializeObject(this.Quotes);
+            var parts = content.Batch(32000).Select(collection => new string(collection.ToArray())).ToArray();
 
             var dict = new Dictionary<string, EntityProperty>();
-            for(int i = 0; i < parts.Length; i++)
+            for(var i = 0; i < parts.Length; i++)
             {
                 dict.Add("Part" + i.ToString("D3"), new EntityProperty(parts[i]));
             }

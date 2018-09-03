@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace Lykke.Service.QuotesHistory
 {
-    public class Program
+    class Program
     {
         public static async Task Main(string[] args)
         {

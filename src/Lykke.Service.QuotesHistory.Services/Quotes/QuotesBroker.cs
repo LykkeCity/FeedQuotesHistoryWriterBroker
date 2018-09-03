@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.Domain.Prices.Model;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
@@ -19,11 +20,11 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
         public QuotesBroker(
             IQuotesManager quotesManager,
             string rabbitConnectionString,
-            ILog log)
-            : base(nameof(QuotesBroker), (int)TimeSpan.FromMinutes(1).TotalMilliseconds, log)
+            ILogFactory logFactory)
+            : base(TimeSpan.FromMinutes(1), logFactory)
         {
             _quotesManager = quotesManager;
-            _log = log;
+            _log = logFactory.CreateLog(this);
 
             var subscriberSettings = RabbitMqSubscriptionSettings
                 .CreateForSubscriber(rabbitConnectionString, "quotefeed", "quoteshistory")
@@ -34,16 +35,21 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
             // so preserving old name since dlx renaming is not trivial
             subscriberSettings.DeadLetterExchangeName = "lykke.quotefeed.quoteshistory.dlx";
 
-            _subscriber = new RabbitMqSubscriber<Quote>(subscriberSettings,
-                    new ResilientErrorHandlingStrategy(_log, subscriberSettings,
-                        retryTimeout: TimeSpan.FromSeconds(10),
-                        retryNum: 10,
-                        next: new DeadQueueErrorHandlingStrategy(_log, subscriberSettings)))
+            _subscriber = new RabbitMqSubscriber<Quote>(
+                logFactory, 
+                subscriberSettings,
+                new ResilientErrorHandlingStrategy(
+                    logFactory, 
+                    subscriberSettings,
+                    retryTimeout: TimeSpan.FromSeconds(10),
+                    retryNum: 10,
+                    next: new DeadQueueErrorHandlingStrategy(logFactory, subscriberSettings)
+                    )
+                 )
                 .SetMessageDeserializer(new MessageDeserializer())
                 .Subscribe(HandleMessage)
                 .SetMessageReadStrategy(new MessageReadQueueStrategy())
                 .CreateDefaultBinding()
-                .SetLogger(log)
                 .Start();
         }
 
@@ -57,23 +63,24 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
             _quotesManager.PersistQuotes().Wait();
         }
 
-        private async Task HandleMessage(Quote quote)
+        private Task HandleMessage(Quote quote)
         {
             try
             {
                 if (quote != null)
                 {
-                    await _quotesManager.ConsumeQuote(quote);
+                    _quotesManager.ConsumeQuote(quote);
                 }
                 else
                 {
-                    await _log.WriteWarningAsync(nameof(QuotesBroker), nameof(HandleMessage), string.Empty,
-                        "Received quote <NULL>.");
+                    _log.Warning("Received quote <NULL>.");
                 }
+
+                return Task.CompletedTask; // For to match requirements of MQ Subscriber.
             }
             catch
             {
-                await _log.WriteWarningAsync(nameof(QuotesBroker), nameof(HandleMessage), quote.ToJson(), "Failed to process quote");
+                _log.Warning("Failed to process quote", context: quote.ToJson());
                 throw;
             }
         }
