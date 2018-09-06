@@ -127,9 +127,7 @@ namespace UnitTests
 
             // This is the copy of Data which is needed to avoid the "sequence has changed while iteration's been performed" case only.
             // The QuotesDataProcessor will read from Data and write to _dataCopy using the corresponding Mock (see below).
-            _dataCopy = 
-                (from d in Data
-                 select new QuotesHistoryEntity(d.PartitionKey, d.RowKey, d.Part000)).ToList();
+            _dataCopy = new List<QuotesHistoryEntity>();
 
             CorrectDates = new List<string>
             {
@@ -279,11 +277,6 @@ namespace UnitTests
 
                 return (data: Data.Take(sizeLimit), token: string.Empty); // We have the single batch for tests.
             }
-
-            public bool DeleteEntity(QuotesHistoryEntity entity)
-            {
-                return _dataCopy.RemoveAll(e => e.PartitionKey == entity.PartitionKey && e.RowKey == entity.RowKey) > 0;
-            }
             
             public bool InsertEntity(QuotesHistoryEntity entity)
             {
@@ -291,7 +284,7 @@ namespace UnitTests
                 return true;
             }
 
-            public void Flush(RepositoryFlushMode mode)
+            public void Flush()
             {
             }
         }
