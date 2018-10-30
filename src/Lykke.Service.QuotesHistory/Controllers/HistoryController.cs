@@ -11,15 +11,11 @@ using System.Threading.Tasks;
 namespace Lykke.Service.QuotesHistory.Controllers
 {
     [Route("api/[controller]")]
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class HistoryController : Controller
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         private readonly IQuoteHistoryRepository _historyRepository;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public HistoryController(IQuoteHistoryRepository historyRepository)
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
             _historyRepository = historyRepository ?? throw new ArgumentNullException(nameof(historyRepository));
         }
@@ -49,17 +45,13 @@ namespace Lykke.Service.QuotesHistory.Controllers
             if (fromMoment >= toMoment)
                 return BadRequest("Starting time stamp for the query should be earlier than the ending time stamp.");
 
-            // ---
-
             try
             {
-#pragma warning disable IDE0042 // Deconstruct variable declaration
                 var quotes = await _historyRepository.GetQuotesBulkAsync(assetPair, priceType == PriceType.Ask, fromMoment, toMoment, continuationToken);
-#pragma warning restore IDE0042 // Deconstruct variable declaration
 
                 return Ok(new QuotesHistoryResponseModel
                 {
-                    Quotes = quotes.Quotes.Select(q => QuotesHistoryResponseItem.FromIQuote(q)),
+                    Quotes = quotes.Quotes.Select(QuotesHistoryResponseItem.FromIQuote),
                     ContinuationToken = quotes.ContinuationToken
                 });
             }
