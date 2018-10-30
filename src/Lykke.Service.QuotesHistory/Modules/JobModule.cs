@@ -1,24 +1,25 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
+using JetBrains.Annotations;
 using Lykke.Common.Log;
+using Lykke.Sdk.Health;
 using Lykke.Service.QuotesHistory.Core.Domain.Quotes;
-using Lykke.Service.QuotesHistory.Core.Services;
 using Lykke.Service.QuotesHistory.Core.Services.Quotes;
-using Lykke.Service.QuotesHistory.Core.Settings;
 using Lykke.Service.QuotesHistory.Repositories;
-using Lykke.Service.QuotesHistory.Services;
 using Lykke.Service.QuotesHistory.Services.Quotes;
+using Lykke.Service.QuotesHistory.Settings;
 using Lykke.SettingsReader;
 
 namespace Lykke.Service.QuotesHistory.Modules
 {
-    class JobModule : Module
+    [UsedImplicitly]
+    public class JobModule : Module
     {
-        private readonly IReloadingManager<AppSettings.QuotesHistorySettings> _settings;
+        private readonly IReloadingManager<QuotesHistorySettings> _settings;
 
-        public JobModule(IReloadingManager<AppSettings.QuotesHistorySettings> settings)
+        public JobModule(IReloadingManager<AppSettings> settings)
         {
-            _settings = settings;
+            _settings = settings.Nested(x => x.QuotesHistoryService);
         }
 
         protected override void Load(ContainerBuilder builder)
