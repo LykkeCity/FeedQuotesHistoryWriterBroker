@@ -27,7 +27,7 @@ namespace Lykke.Service.QuotesHistory.Services.Quotes
             _log = logFactory.CreateLog(this);
 
             var subscriberSettings = RabbitMqSubscriptionSettings
-                .CreateForSubscriber(rabbitConnectionString, "quotefeed", "quoteshistory")
+                .ForSubscriber(rabbitConnectionString, "quotefeed", "quoteshistory")
                 .MakeDurable()
                 .DelayTheRecconectionForA(delay: TimeSpan.FromSeconds(20));
 
